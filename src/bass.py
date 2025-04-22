@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 from numpy.typing import NDArray
-from numpy.polynomial.hermite import hermgauss
+from numpy.polynomial.hermite_e import hermegauss
 from scipy.special import ndtr, ndtri
 from scipy.interpolate import PchipInterpolator, CubicSpline
 
@@ -20,20 +20,22 @@ def conv_heat_gauss_hermite(
     func: Callable[[Floats], Floats],
     n_quad: int = 20,
 ) -> Callable[[Floats], FloatArray]:
-    nodes, weights = hermgauss(n_quad)
+    nodes, weights = hermegauss(n_quad)
+    # nodes, dx = np.linspace(-6, 6, n_quad, retstep=True)
+    # weights = np.exp(-(nodes**2) / 2) * dx
 
     def f(x):
         x_b, t_b = np.broadcast_arrays(x, t)
         target_shape = (-1, *(1,) * x_b.ndim)
         x_b, t_b = x_b[None], t_b[None]
 
-        scale = np.sqrt(2 * t_b + EPS)
+        scale = np.sqrt(t_b + EPS)
         nodes_scaled = nodes.reshape(target_shape) * scale
         weights_reshaped = weights.reshape(target_shape)
 
         y = x_b - nodes_scaled
         func_vals = func(y)
-        return np.sum(func_vals * weights_reshaped / np.sqrt(np.pi), axis=0)
+        return np.sum(func_vals * weights_reshaped / np.sqrt(2 * np.pi), axis=0)
 
     return f
 
@@ -53,6 +55,7 @@ class AuxCDF:
         vals = np.cumsum(dv)
 
         self._w_grid = grid
+        self._u_grid = vals
         self._cdf = PchipInterpolator(grid, vals)
         self._icdf = PchipInterpolator(vals, grid)
 
@@ -86,19 +89,22 @@ class AuxCDF:
         return np.copy(self._w_grid)
 
     def __call__(self, w):
-        return self._cdf(w)
+        w = np.clip(w, self._w_grid.min(), self._w_grid.max())
+        vals = self._cdf(w)
+        return vals
 
     def icdf(self, u):
+        u = np.clip(u, self._u_grid.min(), self._u_grid.max())
         return self._icdf(u)
 
 
-def apply_operator(cdf: AuxCDF, m1: Marginal, m2: Marginal) -> AuxCDF:
+def apply_operator(cdf: AuxCDF, m1: Marginal, m2: Marginal, n_quad: int = 20) -> AuxCDF:
     dt = m2.tenor - m1.tenor
     assert dt > 0
 
-    kf = conv_heat_gauss_hermite(dt, cdf)
+    kf = conv_heat_gauss_hermite(dt, cdf, n_quad)
     fkf = lambda u: m2.icdf(kf(u))
-    kfkf = conv_heat_gauss_hermite(dt, fkf)
+    kfkf = conv_heat_gauss_hermite(dt, fkf, n_quad)
     fkfkf = lambda x: m1.cdf(kfkf(x))
 
     new_vals = fkfkf(cdf.grid)
@@ -113,12 +119,13 @@ def solve_fixed_point(
     max_iters: int = 100,
     grid_points: int = 300,
     interp_bounds_stds: float = 5,
+    n_quad: int = 20,
 ) -> AuxCDF:
 
     l_inf = np.inf
     cdf = AuxCDF.build_initial_approx(m1, m2, grid_points, interp_bounds_stds)
     for _ in range(max_iters):
-        new_cdf = apply_operator(cdf, m1, m2)
+        new_cdf = apply_operator(cdf, m1, m2, n_quad)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             l_inf = np.abs(new_cdf(cdf.grid) - cdf(cdf.grid)).max()
@@ -165,11 +172,17 @@ class BassLV:
         for i in range(len(marginals) - 1):
             m1, m2 = marginals[i], marginals[i + 1]
             cdf = solve_fixed_point(
-                m1, m2, self._tol, self._max_iters, self._aux_grid_sz, self._aux_bound
+                m1,
+                m2,
+                self._tol,
+                self._max_iters,
+                self._aux_grid_sz,
+                self._aux_bound,
+                self._n_quad,
             )
-            kf = conv_heat_gauss_hermite(m2.tenor - m1.tenor, cdf)
+            kf = conv_heat_gauss_hermite(m2.tenor - m1.tenor, cdf, self._n_quad)
             fkf = lambda u: m2.icdf(kf(u))
-            kfkf = lambda t: conv_heat_gauss_hermite(m2.tenor - t, fkf)
+            kfkf = lambda t: conv_heat_gauss_hermite(m2.tenor - t, fkf, self._n_quad)
 
             def func(t: Floats, w: Floats) -> FloatArray:
                 return kfkf(t)(w)

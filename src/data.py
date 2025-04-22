@@ -99,6 +99,8 @@ class MarginalInterp(Marginal):
 
 
 class MarginalLogNormal(Marginal):
+    eps = 1e-7
+
     def __init__(
         self,
         tenor: float,
@@ -112,14 +114,17 @@ class MarginalLogNormal(Marginal):
         return self._t
 
     def cdf(self, x):
-        LB = EPS
-        UB = 1 - EPS
-        u = ndtr((np.log(x) + self._sigma**2 / 2) / self._sigma)
-        return np.clip(u, LB, UB)
+        LB = self.eps
+        UB = 1 - self.eps
+        ndtr_arg = (np.log(x) + self._sigma**2 / 2) / self._sigma
+        u = ndtr(ndtr_arg)
+        u = np.where(u < LB, 0, u)
+        u = np.where(u > UB, 1, u)
+        return u
 
     def icdf(self, u):
-        LB = EPS
-        UB = 1 - EPS
+        LB = self.eps
+        UB = 1 - self.eps
         u = np.clip(u, LB, UB)
         return np.exp(self._sigma * ndtri(u) - self._sigma**2 / 2)
 
