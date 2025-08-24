@@ -1,12 +1,43 @@
-# Bass Local Volatility
+# basslv
 
-Python implementation (incomplete) of the paper [Bass Construction with Multi-Marginals: Lightspeed Computation in a New Local Volatility Model
-](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3853085).
-Only the basic local volatility model is implemented. 
-Tested with analytical marginals from the Black-Scholes model (see [demo](demo.ipynb).
-You can find some logs of the development process in [dev notebook](dev.ipynb) with debugging plots.
-Issues and pull requests are welcome.
+This repository is a fork of https://github.com/igudav/Bass-Local-Volatility
 
-Current issues:
-1. Fixed-point iteration (equation (2) in the paper) is divergent now for tenors > 10. Even for Black-Scholes marginals the solution is visibly inaccurate (see [demo](demo.ipynb)).
-2. Interpolations and inverse CDFs definetely can be improved.
+Differences:
+1. Added functionality to solve fixed-point equation for arbitrary tensors.
+2. Completely redesigned the project architecture.
+
+Now work only for the Black-Scholes model.
+
+Structure:
+```
+├── notebooks                                      <- examples in jupyter notebook
+├── unittest                                       <- some tests
+├── examples                                       <- examples
+└── basslv   <- Source code for use in this project.
+    │
+    ├── __init__.py             <- Makes the basslv a Python module
+    │
+    ├── core
+    │   ├── __init__.py
+    │   ├── bassLocalVolatility.py                 <- contains the complete algorithm including Monte Carlo sampling
+    │   ├── fixedPointEquation.py                  <- contains the numerical algorithm for building the mapping function
+    │   ├── genericMarginal.py                     <- abstract class
+    │   ├── heatKernelConvolutionEngine.py         <- contains methods to calculate convolution
+    │   ├── logNormalMarginal.py                   <- realization of genericMarginal 
+    │   ├── projectTyping.py                       <- auxiliary typing
+    │   ├── solutionFixedPointEquation.py          <- realization of SolutionInterpolator  
+    │   └── solutionInterpolator.py                <- abstract class - solution of fixed point equation
+    │   
+    └── visualVerification  
+         ├── __init__.py
+         └── visualVerification.py                 <- contains methods for visual verification
+```
+
+**References:**
+1) Antoine Conze and Henry-Labordere, Bass Construction with Multi-Marginals:  
+    Lightspeed Computation in a New Local Volatility Model: \
+    https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3853085
+2) Antoine Conze and Henry-Labordere, A new fast local volatility model: \
+    https://www.risk.net/media/download/1079736/download
+
+Note. The references in the code are linked to the second article
