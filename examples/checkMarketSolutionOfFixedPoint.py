@@ -45,26 +45,11 @@ if __name__ == '__main__':
         for callIndex in range(len(calls))
     ]
 
-    # wGrid = np.linspace(-5., 5., 1000)
-    # solution = fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
-    #     marginal1=marginal1,
-    #     marginal2=marginal2,
-    #     wGrid=wGrid,
-    #     solutionInterpolator=SolutionFixedPointEquation
-    # )
-    #
-    # solution = fixedPointEquation.applyOperatorA(
-    #     solution=solution,
-    #     marginal1=marginal1,
-    #     marginal2=marginal2,
-    #     hermGaussPoints=61
-    # )
-
     numericalSolution = fixedPointEquation.solveFixedPointEquation(
         marginal1=marginal1,
         marginal2=marginal2,
         maxIter=21,
-        tol=1e-2,
+        tol=1e-3,
         gridBound=5.,
         gridPoints=2001,
         hermGaussPoints=61,

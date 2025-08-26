@@ -33,10 +33,10 @@ if __name__ == '__main__':
     marginals = [
         MarketMarginal(
             strikes=strikes,
-            callPrices=callPrices[callIndex],
-            tenor=tenors[callIndex]
+            callPrices=callPrices[tenorIndex],
+            tenor=tenors[tenorIndex]
         )
-        for callIndex in range(len(callPrices))
+        for tenorIndex in range(len(callPrices))
     ]
 
     t = np.linspace(0, tenors[-1], timeGridPoints)
