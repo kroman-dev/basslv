@@ -382,7 +382,7 @@ class VisualVerification:
         plt.show()
 
     @classmethod
-    def plotFuncs(cls, x, funcs, labels, title):
+    def plotFuncs(cls, x, funcs, labels, title=''):
         _, generalAxis = plt.subplots(figsize=(15, 8), dpi=120)
         for func, label in zip(funcs, labels):
             generalAxis.plot(x, func(x), label=label)

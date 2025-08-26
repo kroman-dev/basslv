@@ -20,6 +20,10 @@ class VanillaOption:
         self._optionType = optionType
         self._pricingEngine = pricingEngine
 
+    @property
+    def timeToExpiry(self):
+        return self._timeToExpiry
+
     def NPV(self, strike: float, volatility: float) -> float:
         return self._NPV(self._pricingEngine, strike, volatility)
 
