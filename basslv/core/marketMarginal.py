@@ -24,9 +24,9 @@ class MarketMarginal(GenericMarginal):
         self._strikes = strikes
         self._callPrices = callPrices
         self._cdfValues = 1 + np.gradient(self._callPrices, self._strikes)
-        self._logMoneyness = np.log(self._strikes)
 
         if abs(self._cdfValues[-1] - (1. - EPS)) > EPS:
+            # TODO add smart solution
             xMax = self._strikes[-1] + 0.1 * self._strikes[-1]
             xMin = self._strikes[0] - 0.1 * self._strikes[0]
 
@@ -35,10 +35,9 @@ class MarketMarginal(GenericMarginal):
 
             self._strikes = np.concatenate([[xMin], self._strikes, [xMax]])
             self._cdfValues = np.concatenate([[0. + EPS], self._cdfValues, [1. - EPS]])
-            self._logMoneyness = np.log(self._strikes)
 
-        self._interpolator = PchipInterpolator(self._logMoneyness, self._cdfValues, extrapolate=False)
-        self._inverseInterpolator = PchipInterpolator(self._cdfValues, self._logMoneyness, extrapolate=False)
+        self._interpolator = PchipInterpolator(self._strikes, self._cdfValues, extrapolate=False)
+        self._inverseInterpolator = PchipInterpolator(self._cdfValues, self._strikes, extrapolate=False)
 
     def _derivativeOfInverseCdf(self, u: FloatOrVectorType) -> FloatOrVectorType:
         _u = np.clip(u, EPS, 1 - EPS)
@@ -53,5 +52,9 @@ class MarketMarginal(GenericMarginal):
         return self._inverseInterpolator(_u)
 
     def _cdf(self, x: FloatOrVectorType) -> FloatOrVectorType:
-        _x = np.clip(x, a_min=self._logMoneyness[0], a_max=self._logMoneyness[-1])
+        _x = np.clip(x, a_min=self._strikes[0], a_max=self._strikes[-1])
         return self._interpolator(_x)
+
+    def _pdf(self, x: FloatOrVectorType) -> FloatOrVectorType:
+        _x = np.clip(x, a_min=self._strikes[0], a_max=self._strikes[-1])
+        return self._interpolator.derivative()(_x)

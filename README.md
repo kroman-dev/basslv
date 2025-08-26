@@ -34,10 +34,10 @@ Structure:
 ```
 
 **References:**
-1) Antoine Conze and Henry-Labordere, Bass Construction with Multi-Marginals:  
+1) Antoine Conze and Henry-Labordere, A new fast local volatility model: \
+    https://www.risk.net/media/download/1079736/download
+2) Antoine Conze and Henry-Labordere, Bass Construction with Multi-Marginals:  
     Lightspeed Computation in a New Local Volatility Model: \
     https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3853085
-2) Antoine Conze and Henry-Labordere, A new fast local volatility model: \
-    https://www.risk.net/media/download/1079736/download
 
-Note. The references in the code are linked to the second article
+Note. The references in the code are linked to the first article

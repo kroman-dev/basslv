@@ -3,13 +3,17 @@ import matplotlib.pyplot as plt
 
 from copy import deepcopy
 from dataclasses import dataclass, fields
+
 from scipy.interpolate import CubicSpline
 from typing import Callable, List, Any, Dict, Optional
 
+from basslv.core.marketMarginal import MarketMarginal
 from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
 from basslv.core.fixedPointEquation import FixedPointEquation
 from basslv.core.logNormalMarginal import LogNormalMarginal
 from basslv.core.projectTyping import FloatVectorType
+from basslv.pricingEngine.blackPricingEngine import BlackPricingEngine
+from basslv.financeProducts.vanillaCall import VanillaCall
 
 EPS = np.finfo(float).eps
 
@@ -28,6 +32,143 @@ class _MultiPlotInput:
 # noinspection PyTypeChecker,PyCallingNonCallable
 class VisualVerification:
     _fixedPointEquation = FixedPointEquation()
+
+    @classmethod
+    def verifyMarketSolutionOfLinearizedFixedPoint(
+            cls,
+            wGrid = np.linspace(-5, 5, 2001, endpoint=True),
+            marketMarginal1=MarketMarginal(
+                strikes=np.linspace(0.25, 3, 1000, endpoint=True),
+                callPrices=[
+                    VanillaCall(
+                        forward=1.,
+                        discountFactor=1.,
+                        timeToExpiry=2.,
+                        pricingEngine=BlackPricingEngine()
+                    ).NPV(strike=strike, volatility=0.2)
+                    for strike in np.linspace(0.25, 3, 1000, endpoint=True)
+                ],
+                tenor=2.
+            ),
+            marketMarginal2=MarketMarginal(
+                strikes=np.linspace(0.25, 3, 1000, endpoint=True),
+                callPrices=[
+                    VanillaCall(
+                        forward=1.,
+                        discountFactor=1.,
+                        timeToExpiry=3.,
+                        pricingEngine=BlackPricingEngine()
+                    ).NPV(strike=strike, volatility=0.2)
+                    for strike in np.linspace(0.25, 3, 1000, endpoint=True)
+                ],
+                tenor=3.
+            ),
+            logNormalMarginal1=LogNormalMarginal(sigma=0.2, tenor=2.),
+            logNormalMarginal2=LogNormalMarginal(sigma=0.2, tenor=3.)
+    ):
+        marketSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
+            marginal1=marketMarginal1,
+            marginal2=marketMarginal2,
+            wGrid=wGrid,
+            solutionInterpolator=SolutionFixedPointEquation
+        )
+
+        logNormalSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
+            marginal1=logNormalMarginal1,
+            marginal2=logNormalMarginal2,
+            wGrid=wGrid,
+            solutionInterpolator=SolutionFixedPointEquation
+        )
+
+        cls.plotFuncs(
+            x=wGrid,
+            funcs=[marketSolution, logNormalSolution],
+            labels=['marketSolution', 'logNormalSolution'],
+            title='Compare solution of linearized fixed point for lognomal marginal and market'
+        )
+
+    @classmethod
+    def verifyMarketMarginalFunctions(
+            cls,
+            x=np.linspace(1e-5, 5. - 1e-5, 1000),
+            u=np.linspace(1e-5, 1. - 1e-5, 1000),
+            marketMarginal=MarketMarginal(
+                strikes=np.linspace(0.25, 3, 1000, endpoint=True),
+                callPrices=[
+                    VanillaCall(
+                        forward=1.,
+                        discountFactor=1.,
+                        timeToExpiry=2.,
+                        pricingEngine=BlackPricingEngine()
+                    ).NPV(strike=strike, volatility=0.2)
+                    for strike in np.linspace(0.25, 3, 1000, endpoint=True)
+                ],
+                tenor=2.
+            ),
+            logNormalMarginal=LogNormalMarginal(sigma=0.2, tenor=2.)
+    ):
+
+        cls._multiPlot(
+            [
+                _MultiPlotInput(
+                    plot={
+                        "args": [
+                            [x, x],
+                            [logNormalMarginal._pdf(x), marketMarginal._pdf(x)]
+                        ],
+                        "kwargs": {"label": ['lognormal', 'market']}
+                    },
+                    set_title={
+                        "args": ["Compare lognormal and market pdf"]
+                    },
+                    set_yscale={
+                        "args": ["linear"]
+                    }
+                ),
+                _MultiPlotInput(
+                    plot={
+                        "args": [
+                            [x, x],
+                            [logNormalMarginal.cdf(x), marketMarginal.cdf(x)]
+                        ],
+                        "kwargs": {"label": ['lognormal', 'market']}
+                    },
+                    set_title={
+                        "args": ["Compare lognormal and market cdf"]
+                    }
+                ),
+                _MultiPlotInput(
+                    plot={
+                        "args": [
+                            [u, u],
+                            [logNormalMarginal.inverseCdf(u), marketMarginal.inverseCdf(u)]
+                        ],
+                        "kwargs": {"label": ['lognormal', 'market']}
+                    },
+                    set_title={
+                        "args": ["Compare lognormal and market inverse cdf"]
+                    }
+                ),
+                _MultiPlotInput(
+                    plot={
+                        "args": [
+                            [u, u],
+                            [
+                                logNormalMarginal.derivativeOfInverseCdf(u),
+                                marketMarginal.derivativeOfInverseCdf(u)
+                            ]
+                        ],
+                        "kwargs": {"label": ['lognormal', 'market']}
+                    },
+                    set_title={
+                        "args": ["Compare derivative inverse lognormal and market"]
+                    },
+                    set_yscale={
+                        "args": ["log"]
+                    }
+                )
+            ]
+        )
 
     @classmethod
     def verifyLogNormalMarginalFunctions(
@@ -371,7 +512,7 @@ class VisualVerification:
         plt.show()
 
     @classmethod
-    def plot(cls, x, funcsValues, labels, title):
+    def plot(cls, x, funcsValues, labels, title=''):
         _, generalAxis = plt.subplots(figsize=(15, 8), dpi=120)
         for funcValues, label in zip(funcsValues, labels):
             generalAxis.plot(x, funcValues, label=label)
