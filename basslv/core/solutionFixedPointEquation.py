@@ -17,8 +17,7 @@ class SolutionFixedPointEquation(SolutionInterpolator):
             y: FloatVectorType,
             tenor: float
     ):
-        self._tenor = tenor
-        super().__init__(x=x, y=y)
+        super().__init__(x=x, y=y, tenor=tenor)
 
     def _buildInterpolator(self) -> None:
         """
