@@ -5,6 +5,7 @@ This repository is a fork of https://github.com/igudav/Bass-Local-Volatility
 Differences:
 1. Added functionality to solve fixed-point equation for arbitrary tensors.
 2. Completely redesigned the project architecture.
+3. Add MarketMarginal class (correctly work for synthetic call prices from Black model)
 
 Now work only for the Black-Scholes model.
 
@@ -34,10 +35,10 @@ Structure:
 ```
 
 **References:**
-1) Antoine Conze and Henry-Labordere, Bass Construction with Multi-Marginals:  
+1) Antoine Conze and Henry-Labordere, A new fast local volatility model: \
+    https://www.risk.net/media/download/1079736/download
+2) Antoine Conze and Henry-Labordere, Bass Construction with Multi-Marginals:  
     Lightspeed Computation in a New Local Volatility Model: \
     https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3853085
-2) Antoine Conze and Henry-Labordere, A new fast local volatility model: \
-    https://www.risk.net/media/download/1079736/download
 
-Note. The references in the code are linked to the second article
+Note. The references in the code are linked to the first article

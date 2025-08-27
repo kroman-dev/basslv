@@ -61,8 +61,8 @@ class FixedPointEquation:
         ) * (integral(uGrid) - integral(1 / 2))
 
         return solutionInterpolator(
-            x=wGrid,
-            y=PchipInterpolator(inverseCdfValues, uGrid)(wGrid),
+            x=inverseCdfValues,
+            y=uGrid,
             tenor=marginal1.tenor
         )
 
@@ -141,7 +141,8 @@ class FixedPointEquation:
              shift out solution so that equals 0.5.
         """
         wGrid = solution.x
-        print(f'Error in zero: {0.5 - solution(0.)}')
+        errorInZero = 0.5 - solution(0.)
+        print(f'Error in zero: {errorInZero} for marginal.tenor={solution.tenor}')
         objective = lambda x: 0.5 - solution(x)
         adjustment = optimize.bisect(objective, a=-7., b=7.)
         adjustedSolution = solutionInterpolator(
@@ -205,6 +206,7 @@ class FixedPointEquation:
                 break
 
             if iterationIndex == (maxIter - 1):
+                print(f'Current tol: {tol}, reach {lInftyValue}')
                 raise ConvergeError(f'Current tol: {tol}, reach {lInftyValue}')
 
         solution = self.adjustCdfSolution(

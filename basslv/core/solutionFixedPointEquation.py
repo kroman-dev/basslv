@@ -17,8 +17,7 @@ class SolutionFixedPointEquation(SolutionInterpolator):
             y: FloatVectorType,
             tenor: float
     ):
-        self._tenor = tenor
-        super().__init__(x=x, y=y)
+        super().__init__(x=x, y=y, tenor=tenor)
 
     def _buildInterpolator(self) -> None:
         """
@@ -30,18 +29,16 @@ class SolutionFixedPointEquation(SolutionInterpolator):
         """
 
         shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
-        if (shift > EPS) and ((self._y[-1] - (1. - EPS)) > EPS):
+        if (shift > EPS) and abs(self._y[-1] - (1. - EPS)) > EPS:
             xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
+            # TODO self._x[-1] ?
             if abs(xMax) > abs(self._x[0]):
                 xMin = -xMax
             else:
-                raise ValueError('Fail augment the interpolation domain')
-            self._y[-1] - (1. - EPS)
-            PchipInterpolator(
-                np.concatenate([[0. + EPS], self._y, [1. - EPS]]),
-                np.concatenate([[xMin], self._x, [xMax]]),
-                extrapolate=False
-            )
+                # TODO bad solution
+                xMin = self._x[0] * 1.05
+                xMax = self._x[-1] * 1.05
+                # raise ValueError('Fail to augment the interpolation domain')
             self._x = np.concatenate([[xMin], self._x, [xMax]])
             self._y = np.concatenate([[0. + EPS], self._y, [1. - EPS]])
 

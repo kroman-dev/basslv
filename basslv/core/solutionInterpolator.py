@@ -7,9 +7,10 @@ from basslv.core.projectTyping import FloatVectorType, toNumpy
 
 class SolutionInterpolator(ABC):
 
-    def __init__(self, x: FloatVectorType, y: FloatVectorType):
+    def __init__(self, x: FloatVectorType, y: FloatVectorType, tenor: float):
         self._x = x
         self._y = y
+        self._tenor = tenor
         self._verifyCdfValues(self.y)
         self._buildInterpolator()
 
@@ -30,6 +31,10 @@ class SolutionInterpolator(ABC):
     @property
     def y(self) -> FloatVectorType:
         return self._y
+
+    @property
+    def tenor(self) -> float:
+        return self._tenor
 
     @abstractmethod
     def _buildInterpolator(self) -> None:
