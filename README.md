@@ -24,7 +24,8 @@ Structure:
     │   ├── fixedPointEquation.py                  <- contains the numerical algorithm for building the mapping function
     │   ├── genericMarginal.py                     <- abstract class
     │   ├── heatKernelConvolutionEngine.py         <- contains methods to calculate convolution
-    │   ├── logNormalMarginal.py                   <- realization of genericMarginal 
+    │   ├── logNormalMarginal.py                   <- exact case 
+    │   ├── marketMarginal.py                      <- build marginal from market call prices
     │   ├── projectTyping.py                       <- auxiliary typing
     │   ├── solutionFixedPointEquation.py          <- realization of SolutionInterpolator  
     │   └── solutionInterpolator.py                <- abstract class - solution of fixed point equation
