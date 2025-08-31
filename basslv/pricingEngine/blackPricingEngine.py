@@ -12,7 +12,7 @@ class BlackPricingEngine(BlackImpliedVolatility, GenericPricingEngine):
             discountFactor: float,
             timeToExpiry: float,
             strike: float,
-            vol: float,
+            volatility: float,
             optionType: int
     ) -> float:
         if optionType not in [-1, 1]:
@@ -21,7 +21,7 @@ class BlackPricingEngine(BlackImpliedVolatility, GenericPricingEngine):
         return discountFactor * lets_be_rational.black(
             F=forward,
             K=strike,
-            sigma=vol,
+            sigma=volatility,
             T=timeToExpiry,
             q=optionType
         )

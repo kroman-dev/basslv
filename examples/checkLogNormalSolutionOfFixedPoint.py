@@ -11,7 +11,7 @@ from basslv import VisualVerification
 if __name__ == '__main__':
 
     expiries = [2., 3.]
-    vols = [0.2] * 2
+    vols = [0.5] * 2
 
     marginal1, marginal2 = [
         LogNormalMarginal(sigma=sigma, tenor=T)

@@ -149,13 +149,13 @@ class BassLocalVolatility:
             # retrieve relevant times and brownianMotion values
             fromIndex = np.searchsorted(t, timeLeftBound, "left")
             toIndex = np.searchsorted(t, bassTenorModels[bassModelIndex].tenorEnd, "right")
-            currentTimeIndexes = t[fromIndex:toIndex]
+            currentTimeInInterval = t[fromIndex:toIndex]
             brownianOnInterval = brownianMotion[:, fromIndex:toIndex]
 
             bassProcessOnInterval = \
                 bassProcessStart + brownianOnInterval - brownianStart
             underlyingPaths[:, fromIndex:toIndex] = \
-                mappingFunction(currentTimeIndexes, bassProcessOnInterval)
+                mappingFunction(currentTimeInInterval, bassProcessOnInterval)
 
             if toIndex == len(t):
                 break

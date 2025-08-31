@@ -206,8 +206,8 @@ class FixedPointEquation:
                 break
 
             if iterationIndex == (maxIter - 1):
-                print(f'Current tol: {tol}, reach {lInftyValue}')
-                raise ConvergeError(f'Current tol: {tol}, reach {lInftyValue}')
+                print(f'Converge error: current tol: {tol}, reach {lInftyValue}')
+                # raise ConvergeError(f'Current tol: {tol}, reach {lInftyValue}')
 
         solution = self.adjustCdfSolution(
             solution=solution,

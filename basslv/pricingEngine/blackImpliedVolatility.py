@@ -5,9 +5,6 @@ from py_vollib.helpers.exceptions import PriceIsAboveMaximum, PriceIsBelowIntrin
 
 class BlackImpliedVolatility(object):
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def getImpliedVolatility(
             optionPrice: float,
