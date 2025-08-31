@@ -36,3 +36,15 @@ class TestVanillaOption(TestCase):
             self._discountFactor * (self._forward - self._strike),
             callPrice - putPrice
         )
+
+    def testImpliedVolatility(self):
+        callPrice = self._blackVanillaCall.NPV(self._strike, self._volatility)
+        iv = self._blackVanillaCall.getImpliedVolatility(
+            strike=self._strike,
+            optionPrice=callPrice
+        )
+
+        self.assertAlmostEqual(
+            self._volatility,
+            iv
+        )
