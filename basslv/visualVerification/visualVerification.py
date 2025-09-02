@@ -382,8 +382,8 @@ class VisualVerification:
 
         cls.plotComparison(
             x=cdfValues,
-            func1=lhs,
-            func2=G_1,
+            funcValues1=lhs,
+            funcValues2=G_1,
             label1='left hand side',
             label2='right hand side = G_1(F(w))',
             generalTitle=r"Check solution of linearized fixed point eq: "
@@ -399,8 +399,8 @@ class VisualVerification:
     def plotComparison(
             cls,
             x,
-            func1,
-            func2,
+            funcValues1,
+            funcValues2,
             label1: str,
             label2: str,
             generalTitle: str,
@@ -411,15 +411,15 @@ class VisualVerification:
             diffLabelY: str = ''
     ):
         _, (generalAxis, diffAxis) = plt.subplots(nrows=1, ncols=2, figsize=(15, 8), dpi=120)
-        generalAxis.plot(x, func1, label=label1)
-        generalAxis.plot(x, func2, label=label2)
+        generalAxis.plot(x, funcValues1, label=label1)
+        generalAxis.plot(x, funcValues2, label=label2)
         generalAxis.set_title(generalTitle)
         generalAxis.set_xlabel(generalLabelX)
         generalAxis.set_ylabel(generalLabelY)
         generalAxis.legend()
         generalAxis.grid()
 
-        diffAxis.plot(x, func1 - func2, label='diff')
+        diffAxis.plot(x, funcValues1 - funcValues2, label='diff')
         diffAxis.set_xlabel(diffLabelX)
         diffAxis.set_ylabel(diffLabelY)
         diffAxis.legend()
@@ -457,14 +457,17 @@ class VisualVerification:
                     xArgs = inputs.get('args')[0]
                     yArgs = inputs.get('args')[1]
 
-                    if  len(xArgs) > 1:
+                    if len(xArgs) >= 1:
                         for inputIndex, x, y in zip(range(len(xArgs)), xArgs, yArgs):
-                            kwargs = {
-                                key: values[inputIndex]
-                                for key, values in inputs.get("kwargs").items()
-                            }
-                            axisMethod(x, y, **kwargs)
+                            if inputs.get("kwargs") is not None:
+                                kwargs = {
+                                    key: values[inputIndex]
+                                    for key, values in inputs.get("kwargs").items()
+                                }
+                            else:
+                                kwargs = {}
 
+                            axisMethod(x, y, **kwargs)
                 else:
                     axisMethod(*inputs.get('args'))
 
@@ -476,7 +479,7 @@ class VisualVerification:
     @classmethod
     def multiPlot(
             cls,
-            inputs: List[FloatVectorType],
+            funcsAbscissa: List[FloatVectorType],
             funcsCollection: List[List[Callable[[FloatVectorType], FloatVectorType]]],
             labelsCollection: List[List[str]],
             titles: List[str]
@@ -501,10 +504,10 @@ class VisualVerification:
             funcs = funcsCollection[collectionIndex]
             labels = labelsCollection[collectionIndex]
             title = titles[collectionIndex]
-            input = inputs[collectionIndex]
+            abscissa = funcsAbscissa[collectionIndex]
 
             for func, label in zip(funcs, labels):
-                axis.plot(input, func(input), label=label)
+                axis.plot(abscissa, func(abscissa), label=label)
                 axis.set_title(title)
                 axis.legend()
                 axis.grid(True)

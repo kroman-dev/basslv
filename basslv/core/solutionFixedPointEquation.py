@@ -15,8 +15,10 @@ class SolutionFixedPointEquation(SolutionInterpolator):
             self,
             x: FloatVectorType,
             y: FloatVectorType,
-            tenor: float
+            tenor: float,
+            extrapolation: bool = True
     ):
+        self._extrapolation = extrapolation
         super().__init__(x=x, y=y, tenor=tenor)
 
     def _buildInterpolator(self) -> None:
@@ -28,19 +30,20 @@ class SolutionFixedPointEquation(SolutionInterpolator):
              chosen as quantiles (e.g. 99.9% confidence interval).
         """
 
-        shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
-        if (shift > EPS) and abs(self._y[-1] - (1. - EPS)) > EPS:
-            xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
-            # TODO self._x[-1] ?
-            if abs(xMax) > abs(self._x[0]):
-                xMin = -xMax
-            else:
-                # TODO bad solution
-                xMin = self._x[0] * 1.05
-                xMax = self._x[-1] * 1.05
-                # raise ValueError('Fail to augment the interpolation domain')
-            self._x = np.concatenate([[xMin], self._x, [xMax]])
-            self._y = np.concatenate([[0. + EPS], self._y, [1. - EPS]])
+        if self._extrapolation:
+            shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
+            if (shift > EPS) and abs(self._y[-1] - (1. - EPS)) > EPS:
+                xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
+                # TODO self._x[-1] ?
+                if abs(xMax) > abs(self._x[0]):
+                    xMin = -xMax
+                else:
+                    # TODO bad solution
+                    xMin = self._x[0] * 1.05
+                    xMax = self._x[-1] * 1.05
+                    # raise ValueError('Fail to augment the interpolation domain')
+                self._x = np.concatenate([[xMin], self._x, [xMax]])
+                self._y = np.concatenate([[0. + EPS], self._y, [1. - EPS]])
 
         self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
         self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)

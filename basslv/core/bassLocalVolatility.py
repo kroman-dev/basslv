@@ -31,6 +31,10 @@ class BassLocalVolatility:
     _fixedPointEquation = FixedPointEquation()
 
     @classmethod
+    def setFixedPointEquation(cls, newFixedPointEquation):
+        cls._fixedPointEquation = newFixedPointEquation
+
+    @classmethod
     def _buildFirstMarginalMappingFunction(
             cls,
             marginal: LogNormalMarginal,

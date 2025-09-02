@@ -3,7 +3,7 @@ from typing import Callable
 
 from scipy import optimize
 from scipy.stats import norm
-from scipy.interpolate import CubicSpline, PchipInterpolator
+from scipy.interpolate import CubicSpline
 
 from basslv.core.genericMarginal import GenericMarginal
 from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine

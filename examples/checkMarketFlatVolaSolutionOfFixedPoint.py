@@ -62,8 +62,8 @@ if __name__ == '__main__':
 
     VisualVerification.plotComparison(
         x=x,
-        func1=numericalSolution(x),
-        func2=exactFixedPointSolution(x),
+        funcValues1=numericalSolution(x),
+        funcValues2=exactFixedPointSolution(x),
         label1='numericalSolution',
         label2='exact',
         generalTitle="title",
