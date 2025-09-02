@@ -4,7 +4,7 @@ from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
 from basslv.core.logNormalMarginal import LogNormalMarginal
 from basslv.core.marketMarginal import MarketMarginal
 from basslv.core.bassLocalVolatility import BassLocalVolatility
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
 from basslv.financeProducts.vanillaCall import VanillaCall
 from basslv.pricingEngine.blackPricingEngine import BlackPricingEngine
 from basslv.pricingEngine.hestonPricingEngine import HestonPricingEngine
@@ -17,7 +17,7 @@ __all__ = [
     "SolutionFixedPointEquation",
     "LogNormalMarginal",
     "BassLocalVolatility",
-    "HeatKernelConvolutionEngine",
+    "GaussHermitHeatKernelConvolutionEngine",
     "VisualVerification",
     "MarketMarginal",
     "VanillaCall",

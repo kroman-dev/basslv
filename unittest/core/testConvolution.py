@@ -4,13 +4,13 @@ from unittest import TestCase
 from scipy.stats import norm
 from numpy.testing import assert_almost_equal
 
-from basslv import HeatKernelConvolutionEngine
+from basslv import GaussHermitHeatKernelConvolutionEngine
 
 
 class TestConvolution(TestCase):
 
     def setUp(self):
-        self._sampleEngine = HeatKernelConvolutionEngine()
+        self._sampleEngine = GaussHermitHeatKernelConvolutionEngine()
 
     def testHermitGauss(self):
         getSquare = lambda x: x ** 2

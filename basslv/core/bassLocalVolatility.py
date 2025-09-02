@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from basslv.core.fixedPointEquation import FixedPointEquation
 from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
 from basslv.core.logNormalMarginal import LogNormalMarginal
 from basslv.core.projectTyping import FloatOrVectorType
 
@@ -27,7 +27,7 @@ class _BassOneTenorModel:
 
 # ONLY FOR LogNormalMarginal
 class BassLocalVolatility:
-    _convolutionEngine = HeatKernelConvolutionEngine()
+    _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
     _fixedPointEquation = FixedPointEquation()
 
     @classmethod

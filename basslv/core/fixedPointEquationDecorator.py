@@ -26,7 +26,7 @@ class FixedPointEquationDecorator(FixedPointEquation):
             marginal1=marginal1,
             marginal2=marginal2,
             hermGaussPoints=hermGaussPoints,
-            solution=solution,
+            solutionOfFixedPointEquation=solution,
             solutionInterpolatorConstructor=SolutionFixedPointEquation,
             saveInternalConvolution=True
         ).getMappingFunction(time)

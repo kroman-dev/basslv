@@ -2,7 +2,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from basslv import BassLocalVolatility, VanillaCall, MarketMarginal, HestonPricingEngine, VisualVerification
+from basslv import BassLocalVolatility, VanillaCall
+from basslv import MarketMarginal, HestonPricingEngine, VisualVerification
 
 
 if __name__ == '__main__':
@@ -10,7 +11,7 @@ if __name__ == '__main__':
 
     sigma = 0.2
     tenors = [1., 2.]
-    pathsNumber = 50000
+    pathsNumber = 10000
     timeGridPoints = 3
     SEED = 42
 

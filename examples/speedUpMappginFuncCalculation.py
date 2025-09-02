@@ -5,7 +5,7 @@ from typing import Callable
 from functools import wraps
 
 from basslv import FixedPointEquation, LogNormalMarginal, VisualVerification
-from basslv import HeatKernelConvolutionEngine, FloatVectorType, SolutionFixedPointEquation
+from basslv import GaussHermitHeatKernelConvolutionEngine, FloatVectorType, SolutionFixedPointEquation
 from basslv.core.genericMarginal import GenericMarginal, EPS
 from basslv.core.solutionInterpolator import SolutionInterpolator
 
@@ -26,7 +26,7 @@ def loggedTime(func):
 
 class MappingFunction:
 
-    _convolutionEngine = HeatKernelConvolutionEngine()
+    _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
 
     def __init__(
             self,

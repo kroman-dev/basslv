@@ -7,8 +7,10 @@ from scipy.interpolate import CubicSpline
 
 from basslv.core.genericMarginal import GenericMarginal
 from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
 from basslv.core.solutionInterpolator import SolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
+from basslv.core.mappingFunction import MappingFunction
 
 
 EPS = np.finfo(float).eps
@@ -24,7 +26,14 @@ class FixedPointEquation:
     """
         [1] Antoine Conze and Henry-Labordere, "A new fast local volatility model"
     """
-    _convolutionEngine = HeatKernelConvolutionEngine()
+    _convolutionEngine: HeatKernelConvolutionEngine = GaussHermitHeatKernelConvolutionEngine()
+
+    @classmethod
+    def setConvolutionEngine(
+            cls,
+            newConvolutionEngine: HeatKernelConvolutionEngine
+    ):
+        cls._convolutionEngine = newConvolutionEngine
 
     @staticmethod
     def getExactSolutionOfFixedPointEquationInLogNormalCase(
@@ -79,10 +88,9 @@ class FixedPointEquation:
             Equation (3) [1]
         """
         internalConvolution = \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
+            cls._convolutionEngine.convolution(
                 time=np.array([marginal2.tenor - marginal1.tenor])[None],
-                func=solution,
-                hermgaussPoints=hermGaussPoints
+                func=solution
         )
 
         def applySecondMarginalInverseCdf(x):
@@ -90,10 +98,9 @@ class FixedPointEquation:
             return marginal2.inverseCdf(u)
 
         externalConvolution = \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
+            cls._convolutionEngine.convolution(
                 time=marginal2.tenor - time,
                 func=applySecondMarginalInverseCdf,
-                hermgaussPoints=hermGaussPoints
         )
         return externalConvolution
 
