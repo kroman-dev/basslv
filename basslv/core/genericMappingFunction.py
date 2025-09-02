@@ -24,7 +24,10 @@ class GenericMappingFunction(ABC):
         self._solutionConstructor = solutionInterpolatorConstructor
 
     @classmethod
-    def setConvolutionEngine(cls, newConvolutionEngine: GenericHeatKernelConvolutionEngine):
+    def setConvolutionEngine(
+            cls,
+            newConvolutionEngine: GenericHeatKernelConvolutionEngine
+    ) -> None:
         cls._convolutionEngine = newConvolutionEngine
 
     @abstractmethod

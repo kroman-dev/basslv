@@ -59,8 +59,7 @@ class BassLocalVolatility:
             fixedPointEquationMaxIter: int,
             fixedPointEquationTolerance: float,
             fixedPointEquationGridBound: float,
-            fixedPointEquationGridPoints: int,
-            convolutionHermGaussPoints: int
+            fixedPointEquationGridPoints: int
     ) -> List[_BassOneTenorModel]:
         tenorModels: List[_BassOneTenorModel] = [
             _BassOneTenorModel(
@@ -84,8 +83,7 @@ class BassLocalVolatility:
                 maxIter=fixedPointEquationMaxIter,
                 tol=fixedPointEquationTolerance,
                 gridBound=fixedPointEquationGridBound,
-                gridPoints=fixedPointEquationGridPoints,
-                solutionInterpolator=SolutionFixedPointEquation
+                gridPoints=fixedPointEquationGridPoints
             )
             mappingFunction = lambda t, w: \
                 cls._fixedPointEquation.getMappingFunction(
@@ -117,7 +115,6 @@ class BassLocalVolatility:
             fixedPointEquationTolerance: float = 1e-5,
             fixedPointEquationGridBound: float = 5.,
             fixedPointEquationGridPoints: int =2001,
-            convolutionHermGaussPoints: int = 61,
             randomGenerator: np.random.Generator = None
     ):
         randomGenerator = randomGenerator or np.random.default_rng()
@@ -137,8 +134,7 @@ class BassLocalVolatility:
             fixedPointEquationMaxIter=fixedPointEquationMaxIter,
             fixedPointEquationTolerance=fixedPointEquationTolerance,
             fixedPointEquationGridBound=fixedPointEquationGridBound,
-            fixedPointEquationGridPoints=fixedPointEquationGridPoints,
-            convolutionHermGaussPoints=convolutionHermGaussPoints
+            fixedPointEquationGridPoints=fixedPointEquationGridPoints
         )
 
         for bassModelIndex in range(len(bassTenorModels)):

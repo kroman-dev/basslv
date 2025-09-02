@@ -11,6 +11,7 @@ from basslv.core.genericMappingFunction import GenericMappingFunction
 
 class MappingFunction(GenericMappingFunction):
 
+    # TODO set None
     _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
 
     def __init__(
