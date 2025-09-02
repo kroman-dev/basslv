@@ -4,7 +4,7 @@ from typing import Callable
 from basslv.core.projectTyping import FloatVectorType
 
 
-class HeatKernelConvolutionEngine(ABC):
+class GenericHeatKernelConvolutionEngine(ABC):
 
     @abstractmethod
     def convolution(

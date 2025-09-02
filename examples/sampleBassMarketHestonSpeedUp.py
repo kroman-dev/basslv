@@ -14,7 +14,8 @@ if __name__ == '__main__':
 
     sigma = 0.2
     timeGridPoints = 3
-    tenors = np.array([0., 1., 2.])
+    # tenors = np.array([0., 1., 2.])
+    tenors = [1., 2.]
     pathsNumber = 100000
     SEED = 42
 
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     strikes = np.linspace(0.25, 3., 200, endpoint=True)
     volatility = 0.2
 
-    # t = np.linspace(0, tenors[-1], timeGridPoints, endpoint=True)
+    t = np.linspace(0, tenors[-1], timeGridPoints, endpoint=True)
 
     calls = [
         VanillaCall(
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     bassLocalVolatility.setFixedPointEquation(FixedPointEquationDecorator())
 
     pathsBassLv = bassLocalVolatility.sample(
-        t=tenors,
+        t=t,
         pathsNumber=pathsNumber,
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),

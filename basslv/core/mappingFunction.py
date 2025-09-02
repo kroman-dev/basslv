@@ -3,12 +3,13 @@ import numpy as np
 from typing import Callable
 
 from basslv.core.genericMarginal import GenericMarginal
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
 from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
+from basslv.core.genericMappingFunction import GenericMappingFunction
 
 
-class MappingFunction:
+class MappingFunction(GenericMappingFunction):
 
     _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
 
@@ -16,17 +17,17 @@ class MappingFunction:
             self,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            hermGaussPoints: int,
-            solutionOfFixedPointEquation: SolutionInterpolator,
-            solutionInterpolatorConstructor: SolutionInterpolator,
+            solutionOfFixedPointEquation: GenericSolutionInterpolator,
+            solutionInterpolatorConstructor: GenericSolutionInterpolator,
             saveInternalConvolution: bool = False
     ):
-        self._marginal1 = marginal1
-        self._marginal2 = marginal2
-        self._hermGaussPoints = hermGaussPoints
+        super().__init__(
+            marginal1=marginal1,
+            marginal2=marginal2,
+            solutionOfFixedPointEquation=solutionOfFixedPointEquation,
+            solutionInterpolatorConstructor=solutionInterpolatorConstructor
+        )
         self._internalConvolution = None
-        self._solutionOfFixedPointEquation = solutionOfFixedPointEquation
-        self._solutionConstructor = solutionInterpolatorConstructor
         self._saveInternalConvolution = saveInternalConvolution
         if saveInternalConvolution:
             self._internalConvolution = self._prepareInternalConvolution()
@@ -42,13 +43,12 @@ class MappingFunction:
 
     def _calculateInternalConvolution(
             self,
-            solution: SolutionInterpolator
+            solution: GenericSolutionInterpolator
     ) -> Callable[[FloatVectorType], FloatVectorType]:
         internalConvolution = \
-            self._convolutionEngine.useGaussHermiteQuadrature(
+            self._convolutionEngine.convolution(
                 time=np.array([self._marginal2.tenor - self._marginal1.tenor])[None],
-                func=solution,
-                hermgaussPoints=self._hermGaussPoints
+                func=solution
         )
         return internalConvolution
 
@@ -59,14 +59,9 @@ class MappingFunction:
         """
             Equation (3) [1]
         """
-        if self._saveInternalConvolution:
-            internalConvolution = self._internalConvolution
-        else:
-            internalConvolution = \
-                self._convolutionEngine.useGaussHermiteQuadrature(
-                    time=np.array([self._marginal2.tenor - self._marginal1.tenor])[None],
-                    func=self._solutionOfFixedPointEquation,
-                    hermgaussPoints=self._hermGaussPoints
+        internalConvolution = self._internalConvolution \
+            if self._saveInternalConvolution else self._calculateInternalConvolution(
+                self._solutionOfFixedPointEquation
             )
 
         def applySecondMarginalInverseCdf(x):
@@ -74,9 +69,8 @@ class MappingFunction:
             return self._marginal2.inverseCdf(u)
 
         externalConvolution = \
-            self._convolutionEngine.useGaussHermiteQuadrature(
+            self._convolutionEngine.convolution(
                 time=self._marginal2.tenor - time,
-                func=applySecondMarginalInverseCdf,
-                hermgaussPoints=self._hermGaussPoints
+                func=applySecondMarginalInverseCdf
         )
         return externalConvolution

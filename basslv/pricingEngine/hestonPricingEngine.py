@@ -6,6 +6,8 @@ from typing import Optional
 from basslv.pricingEngine.genericPricingEngine import GenericPricingEngine
 from basslv.pricingEngine.blackImpliedVolatility import BlackImpliedVolatility
 
+EPS = np.finfo(float).eps
+
 
 class HestonPricingEngine(BlackImpliedVolatility, GenericPricingEngine):
 
@@ -100,6 +102,10 @@ class HestonPricingEngine(BlackImpliedVolatility, GenericPricingEngine):
     ) -> float:
         if optionType != 1:
             raise NotImplementedError()
+
+        if abs(timeToExpiry) < EPS:
+            intrinsicValue = max(forward - strike, 0.0)
+            return intrinsicValue
 
         undiscountedPrice = self.getUndiscountedPrice(
             forward=forward,

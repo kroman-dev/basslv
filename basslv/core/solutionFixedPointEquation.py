@@ -3,13 +3,13 @@ import numpy as np
 from scipy.interpolate import PchipInterpolator
 from scipy.stats import norm
 
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
 
 EPS = np.finfo(np.float64).eps
 
 
-class SolutionFixedPointEquation(SolutionInterpolator):
+class SolutionFixedPointEquation(GenericSolutionInterpolator):
 
     def __init__(
             self,

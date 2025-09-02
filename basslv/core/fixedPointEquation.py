@@ -6,11 +6,10 @@ from scipy.stats import norm
 from scipy.interpolate import CubicSpline
 
 from basslv.core.genericMarginal import GenericMarginal
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
 from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
-from basslv.core.mappingFunction import MappingFunction
 
 
 EPS = np.finfo(float).eps
@@ -26,12 +25,12 @@ class FixedPointEquation:
     """
         [1] Antoine Conze and Henry-Labordere, "A new fast local volatility model"
     """
-    _convolutionEngine: HeatKernelConvolutionEngine = GaussHermitHeatKernelConvolutionEngine()
+    _convolutionEngine: GenericHeatKernelConvolutionEngine = GaussHermitHeatKernelConvolutionEngine()
 
     @classmethod
     def setConvolutionEngine(
             cls,
-            newConvolutionEngine: HeatKernelConvolutionEngine
+            newConvolutionEngine: GenericHeatKernelConvolutionEngine
     ):
         cls._convolutionEngine = newConvolutionEngine
 
@@ -51,8 +50,8 @@ class FixedPointEquation:
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
             wGrid: FloatVectorType,
-            solutionInterpolator: SolutionInterpolator
-    ) -> SolutionInterpolator:
+            solutionInterpolator: GenericSolutionInterpolator
+    ) -> GenericSolutionInterpolator:
         """
             Equation (12) [1]
         """
@@ -78,11 +77,10 @@ class FixedPointEquation:
     @classmethod
     def getMappingFunction(
             cls,
-            solution: SolutionInterpolator,
+            solution: GenericSolutionInterpolator,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            time: float,
-            hermGaussPoints: int
+            time: float
     ) -> Callable[[FloatVectorType], FloatVectorType]:
         """
             Equation (3) [1]
@@ -107,10 +105,9 @@ class FixedPointEquation:
     @classmethod
     def applyOperatorA(
             cls,
-            solution: SolutionInterpolator,
+            solution: GenericSolutionInterpolator,
             marginal1: GenericMarginal,
-            marginal2: GenericMarginal,
-            hermGaussPoints: int
+            marginal2: GenericMarginal
     ) -> Callable[[FloatVectorType], FloatVectorType]:
         """
             Equation (2) [1]
@@ -121,8 +118,7 @@ class FixedPointEquation:
                 solution=solution,
                 marginal1=marginal1,
                 marginal2=marginal2,
-                time=marginal1.tenor,
-                hermGaussPoints=hermGaussPoints
+                time=marginal1.tenor
             )(x)
             return marginal1.cdf(mappingFuncValues)
 
@@ -137,9 +133,9 @@ class FixedPointEquation:
 
     @staticmethod
     def adjustCdfSolution(
-            solution: SolutionInterpolator,
-            solutionInterpolator: SolutionInterpolator
-    ) -> SolutionInterpolator:
+            solution: GenericSolutionInterpolator,
+            solutionInterpolator: GenericSolutionInterpolator
+    ) -> GenericSolutionInterpolator:
         """
             In current version (22/08/2025) a solution of the Fixed Point Equation,
              when an initial iteration is got as solution of Linearized Fixed Point Equation,
@@ -165,13 +161,12 @@ class FixedPointEquation:
             self,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            solutionInterpolator: SolutionInterpolator,
+            solutionInterpolator: GenericSolutionInterpolator,
             maxIter: int = 61,
             tol: float = 1e-5,
             gridBound: float = 5.,
-            gridPoints = 2001,
-            hermGaussPoints: int = 61
-    ) -> SolutionInterpolator:
+            gridPoints = 2001
+    ) -> GenericSolutionInterpolator:
         wGrid = np.linspace(
             start=-gridBound,
             stop=gridBound,
@@ -192,8 +187,7 @@ class FixedPointEquation:
                 y=self.applyOperatorA(
                     solution=solution,
                     marginal1=marginal1,
-                    marginal2=marginal2,
-                    hermGaussPoints=hermGaussPoints
+                    marginal2=marginal2
                 )(wGrid),
                 tenor=marginal1.tenor
             )

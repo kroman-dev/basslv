@@ -1,15 +1,13 @@
-import numpy as np
-
 from abc import ABC, abstractmethod
 from typing import Callable
 
 from basslv.core.genericMarginal import GenericMarginal
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
 
 
-class MappingFunction:
+class GenericMappingFunction(ABC):
 
     _convolutionEngine = None
 
@@ -17,8 +15,8 @@ class MappingFunction:
             self,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            solutionOfFixedPointEquation: SolutionInterpolator,
-            solutionInterpolatorConstructor: SolutionInterpolator,
+            solutionOfFixedPointEquation: GenericSolutionInterpolator,
+            solutionInterpolatorConstructor: GenericSolutionInterpolator,
     ):
         self._marginal1 = marginal1
         self._marginal2 = marginal2
@@ -26,7 +24,7 @@ class MappingFunction:
         self._solutionConstructor = solutionInterpolatorConstructor
 
     @classmethod
-    def setConvolutionEngine(cls, newConvolutionEngine: HeatKernelConvolutionEngine):
+    def setConvolutionEngine(cls, newConvolutionEngine: GenericHeatKernelConvolutionEngine):
         cls._convolutionEngine = newConvolutionEngine
 
     @abstractmethod

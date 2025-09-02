@@ -71,8 +71,6 @@ if __name__ == '__main__':
 
     print(time.time() - startTime)
 
-    exit()
-
     VisualVerification.plot(
         x=strikes,
         funcsValues=[absError],

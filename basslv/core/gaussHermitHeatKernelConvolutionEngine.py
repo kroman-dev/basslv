@@ -6,13 +6,13 @@ from numpy.polynomial.hermite import hermgauss
 from numpy.polynomial.hermite_e import hermegauss
 
 from basslv.core.projectTyping import FloatVectorType, toNumpy
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
 
 
 EPS = np.finfo(float).eps
 
 
-class GaussHermitHeatKernelConvolutionEngine(HeatKernelConvolutionEngine):
+class GaussHermitHeatKernelConvolutionEngine(GenericHeatKernelConvolutionEngine):
 
     _hermgaussPoints = 61
 

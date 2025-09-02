@@ -37,8 +37,7 @@ class BassLocalVolatility:
     @classmethod
     def _buildFirstMarginalMappingFunction(
             cls,
-            marginal: LogNormalMarginal,
-            hermgaussPoints: int
+            marginal: LogNormalMarginal
     ):
         exactSolution = cls._fixedPointEquation.\
             getExactSolutionOfFixedPointEquationInLogNormalCase(
@@ -47,10 +46,9 @@ class BassLocalVolatility:
         terminalConditionFunction = \
             lambda w: marginal.inverseCdf(exactSolution(w))
         mappingFunc = lambda t, w: \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
+            cls._convolutionEngine.convolution(
                 time=marginal.tenor - t,
-                func=terminalConditionFunction,
-                hermgaussPoints=hermgaussPoints
+                func=terminalConditionFunction
         )(w)
         return mappingFunc
 
@@ -69,8 +67,7 @@ class BassLocalVolatility:
                 tenorStart=0.,
                 tenorEnd=marginals[0].tenor,
                 mappingFunction=cls._buildFirstMarginalMappingFunction(
-                    marginal=marginals[0],
-                    hermgaussPoints=convolutionHermGaussPoints
+                    marginal=marginals[0]
                 ),
                 solution=None,
                 marginal=marginals[0]
@@ -88,7 +85,6 @@ class BassLocalVolatility:
                 tol=fixedPointEquationTolerance,
                 gridBound=fixedPointEquationGridBound,
                 gridPoints=fixedPointEquationGridPoints,
-                hermGaussPoints=convolutionHermGaussPoints,
                 solutionInterpolator=SolutionFixedPointEquation
             )
             mappingFunction = lambda t, w: \
@@ -96,8 +92,7 @@ class BassLocalVolatility:
                     solution=solution,
                     marginal1=marginal1,
                     marginal2=marginal2,
-                    time=t,
-                    hermGaussPoints=convolutionHermGaussPoints
+                    time=t
             )(w)
 
             tenorModels.append(
