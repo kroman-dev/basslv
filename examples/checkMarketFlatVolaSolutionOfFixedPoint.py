@@ -51,9 +51,7 @@ if __name__ == '__main__':
         maxIter=21,
         tol=1e-3,
         gridBound=5.,
-        gridPoints=2001,
-        hermGaussPoints=61,
-        solutionInterpolator=SolutionFixedPointEquation
+        gridPoints=2001
     )
 
     print(numericalSolution(0.))

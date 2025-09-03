@@ -11,7 +11,8 @@ from basslv.core.genericMappingFunction import GenericMappingFunction
 
 class MappingFunction(GenericMappingFunction):
 
-    # TODO set None
+    _saveInternalConvolution = True
+    # TODO details should depend on abstractions
     _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
 
     def __init__(
@@ -19,8 +20,7 @@ class MappingFunction(GenericMappingFunction):
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
             solutionOfFixedPointEquation: GenericSolutionInterpolator,
-            solutionInterpolatorConstructor: GenericSolutionInterpolator,
-            saveInternalConvolution: bool = False
+            solutionInterpolatorConstructor: GenericSolutionInterpolator
     ):
         super().__init__(
             marginal1=marginal1,
@@ -29,9 +29,12 @@ class MappingFunction(GenericMappingFunction):
             solutionInterpolatorConstructor=solutionInterpolatorConstructor
         )
         self._internalConvolution = None
-        self._saveInternalConvolution = saveInternalConvolution
-        if saveInternalConvolution:
+        if self._saveInternalConvolution:
             self._internalConvolution = self._prepareInternalConvolution()
+
+    @classmethod
+    def setSaveInternalConvolution(cls, saveInternalConvolution: bool):
+        cls._saveInternalConvolution = saveInternalConvolution
 
     def _prepareInternalConvolution(self):
         x = self._solutionOfFixedPointEquation.x

@@ -245,8 +245,7 @@ class VisualVerification:
             cls,
             marginal1: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=2.),
             marginal2: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=3.),
-            wGrid: FloatVectorType = np.linspace(-5., 5., 2001, endpoint=True) * np.sqrt(2.),
-            hermGaussPoints=61
+            wGrid: FloatVectorType = np.linspace(-5., 5., 2001, endpoint=True) * np.sqrt(2.)
     ):
         exactMappingFunction = lambda wiener: np.exp(
             -0.5 * marginal1._sigma ** 2 * marginal1.tenor \
@@ -260,8 +259,7 @@ class VisualVerification:
         numericalSolution = cls._fixedPointEquation.solveFixedPointEquation(
             marginal1=marginal1,
             marginal2=marginal2,
-            solutionInterpolator=SolutionFixedPointEquation,
-            hermGaussPoints=hermGaussPoints
+            solutionInterpolator=SolutionFixedPointEquation
         )
 
         mappingFuncFromOperatorWithExactSolution = \
@@ -269,16 +267,14 @@ class VisualVerification:
                 solution=exactFixedPointSolution,
                 marginal1=marginal1,
                 marginal2=marginal2,
-                time=marginal1.tenor,
-                hermGaussPoints=hermGaussPoints
+                time=marginal1.tenor
             )
 
         numericalMapping = cls._fixedPointEquation.getMappingFunction(
             solution=numericalSolution,
             marginal1=marginal1,
             marginal2=marginal2,
-            time=marginal1.tenor,
-            hermGaussPoints=hermGaussPoints
+            time=marginal1.tenor
         )
 
         labelMappingAfterConvolution = \
@@ -331,7 +327,6 @@ class VisualVerification:
                     solution=solution,
                     marginal1=marginal1,
                     marginal2=marginal2,
-                    hermGaussPoints=61
                 )(wGrid),
                 tenor=marginal1.tenor
             )

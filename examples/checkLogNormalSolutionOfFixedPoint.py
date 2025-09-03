@@ -24,11 +24,9 @@ if __name__ == '__main__':
         marginal1=marginal1,
         marginal2=marginal2,
         maxIter=61,
-        tol=1e-5,
+        tol=1e-4,
         gridBound=5.,
-        gridPoints=2001,
-        hermGaussPoints=61,
-        solutionInterpolator=SolutionFixedPointEquation
+        gridPoints=2001
     )
 
     print(numericalSolution(0.))

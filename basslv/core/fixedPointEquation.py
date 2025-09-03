@@ -8,6 +8,7 @@ from scipy.interpolate import CubicSpline
 from basslv.core.genericMarginal import GenericMarginal
 from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
 from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
+from basslv.core.genericMappingFunction import GenericMappingFunction
 from basslv.core.mappingFunction import MappingFunction
 from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
 from basslv.core.projectTyping import FloatVectorType
@@ -26,16 +27,26 @@ class FixedPointEquation:
     """
         [1] Antoine Conze and Henry-Labordere, "A new fast local volatility model"
     """
-    # TODO set None
-    _mappingFunctionConstructor = MappingFunction
-    _solutionInterpolatorConstructor = SolutionFixedPointEquation
+    # TODO details should depend on abstractions
+    _mappingFunctionConstructor: GenericMappingFunction = MappingFunction
+    _solutionInterpolatorConstructor: GenericSolutionInterpolator = \
+        SolutionFixedPointEquation
+
+    @classmethod
+    def setMappingFunction(
+            cls,
+            newMappingFunction: GenericMappingFunction
+    ) -> None:
+        cls._mappingFunctionConstructor = newMappingFunction
 
     @classmethod
     def setConvolutionEngine(
             cls,
             newConvolutionEngine: GenericHeatKernelConvolutionEngine
     ) -> None:
-        cls._mappingFunctionConstructor.setConvolutionEngine(newConvolutionEngine)
+        cls._mappingFunctionConstructor.setConvolutionEngine(
+            newConvolutionEngine
+        )
 
     @classmethod
     def setSolutionInterpolator(
@@ -95,13 +106,11 @@ class FixedPointEquation:
         """
             Equation (3) [1]
         """
-        # TODO incorrect interface
         return cls._mappingFunctionConstructor(
             marginal1=marginal1,
             marginal2=marginal2,
             solutionOfFixedPointEquation=solution,
-            solutionInterpolatorConstructor=cls._solutionInterpolatorConstructor,
-            saveInternalConvolution=True
+            solutionInterpolatorConstructor=cls._solutionInterpolatorConstructor
         ).getMappingFunction(time)
 
     @classmethod
@@ -149,7 +158,7 @@ class FixedPointEquation:
         errorInZero = 0.5 - solution(0.)
         print(f'Error in zero: {errorInZero} for marginal.tenor={solution.tenor}')
         objective = lambda x: 0.5 - solution(x)
-        adjustment = optimize.bisect(objective, a=-7., b=7.)
+        adjustment = optimize.bisect(objective, a=-10., b=10.)
         adjustedSolution = cls._solutionInterpolatorConstructor(
             x=wGrid - adjustment,
             y=solution(wGrid),
