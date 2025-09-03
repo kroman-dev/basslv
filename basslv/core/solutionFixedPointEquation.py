@@ -49,7 +49,14 @@ class SolutionFixedPointEquation(GenericSolutionInterpolator):
             self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
             self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)
         except:
-            raise Exception
+            try:
+                yUnique, yUniqueIndexes = np.unique(self.y, return_index=True)
+                self._y = self._y[yUniqueIndexes]
+                self._x = self._x[yUniqueIndexes]
+                self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
+                self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)
+            except Exception as e:
+                raise e
 
     @property
     def tenor(self) -> float:

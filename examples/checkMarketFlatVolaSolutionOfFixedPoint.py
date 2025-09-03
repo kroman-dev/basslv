@@ -49,7 +49,7 @@ if __name__ == '__main__':
         marginal1=marginal1,
         marginal2=marginal2,
         maxIter=21,
-        tol=1e-3,
+        tol=1e-5,
         gridBound=5.,
         gridPoints=2001
     )

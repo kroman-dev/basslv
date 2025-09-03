@@ -47,7 +47,7 @@ if __name__ == '__main__':
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),
         fixedPointEquationTolerance=1e-4,
-        fixedPointEquationMaxIter=10
+        fixedPointEquationMaxIter=20
     )
 
     randomGenerator = np.random.default_rng(SEED)

@@ -69,15 +69,13 @@ class VisualVerification:
         marketSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=marketMarginal1,
             marginal2=marketMarginal2,
-            wGrid=wGrid,
-            solutionInterpolator=SolutionFixedPointEquation
+            wGrid=wGrid
         )
 
         logNormalSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=logNormalMarginal1,
             marginal2=logNormalMarginal2,
-            wGrid=wGrid,
-            solutionInterpolator=SolutionFixedPointEquation
+            wGrid=wGrid
         )
 
         cls.plotFuncs(
@@ -251,15 +249,19 @@ class VisualVerification:
             -0.5 * marginal1._sigma ** 2 * marginal1.tenor \
             + marginal1._sigma * wiener
         )
-        exactFixedPointSolution = \
-            cls._fixedPointEquation. \
+        exactFixedPointSolution = SolutionFixedPointEquation(
+            x=wGrid,
+            y=cls._fixedPointEquation. \
                 getExactSolutionOfFixedPointEquationInLogNormalCase(
                 marginal1.tenor
-            )
+            )(wGrid),
+            tenor=marginal1.tenor,
+            extrapolation=False
+        )
+
         numericalSolution = cls._fixedPointEquation.solveFixedPointEquation(
             marginal1=marginal1,
-            marginal2=marginal2,
-            solutionInterpolator=SolutionFixedPointEquation
+            marginal2=marginal2
         )
 
         mappingFuncFromOperatorWithExactSolution = \
@@ -351,13 +353,11 @@ class VisualVerification:
             marginal1: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=2.),
             marginal2: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=3.),
             wGrid: FloatVectorType = np.linspace(-5., 5., 1000) * np.sqrt(2.),
-            cdfInterpolator: SolutionFixedPointEquation = SolutionFixedPointEquation
     ):
         cdfSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=marginal1,
             marginal2=marginal2,
-            wGrid=wGrid,
-            solutionInterpolator=cdfInterpolator
+            wGrid=wGrid
         )
 
         dw = wGrid[1] - wGrid[0]

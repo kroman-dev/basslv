@@ -1,10 +1,9 @@
 import time
 import numpy as np
 
-from basslv import BassLocalVolatility, VanillaCall, MarketMarginal
+from basslv import BassLocalVolatility, VanillaCall, VanillaPut, MarketMarginal
 from basslv import HestonPricingEngine, VisualVerification
 
-from basslv.core.fixedPointEquation import FixedPointEquation
 from basslv.visualVerification.visualVerification import _MultiPlotInput
 
 
@@ -12,7 +11,6 @@ if __name__ == '__main__':
 
     startTime = time.time()
 
-    sigma = 0.2
     timeGridPoints = 3
     # tenors = np.array([0., 1., 2.])
     tenors = [1., 2.]
@@ -22,7 +20,8 @@ if __name__ == '__main__':
     forward = 1.
     discountFactor = 1
     strikes = np.linspace(0.25, 3., 200, endpoint=True)
-    volatility = 0.2
+    callStrikes = strikes[np.where(strikes >= 1.)[0]]
+    putStrikes = strikes[np.where(strikes < 1.)[0]]
 
     t = np.linspace(0, tenors[-1], timeGridPoints, endpoint=True)
 
@@ -32,10 +31,26 @@ if __name__ == '__main__':
             discountFactor=discountFactor,
             timeToExpiry=tenor,
             pricingEngine=HestonPricingEngine(
-                kappa=0.1,
-                theta=0.2,
-                rho=-0.,
-                volOfVol=0.01,
+                kappa=2.,
+                theta=0.1,
+                rho=-0.2,
+                volOfVol=0.7,
+                initialVariance=0.1
+            )
+        )
+        for tenor in tenors
+    ]
+
+    puts = [
+        VanillaPut(
+            forward=forward,
+            discountFactor=discountFactor,
+            timeToExpiry=tenor,
+            pricingEngine=HestonPricingEngine(
+                kappa=2.,
+                theta=0.1,
+                rho=-0.2,
+                volOfVol=0.7,
                 initialVariance=0.1
             )
         )
@@ -44,7 +59,7 @@ if __name__ == '__main__':
 
     callPrices = [
         [
-            call.NPV(strike=strike, volatility=volatility)
+            call.NPV(strike=strike, volatility=None)
             for strike in strikes
         ]
         for call in calls
@@ -60,7 +75,6 @@ if __name__ == '__main__':
     ]
 
     bassLocalVolatility = BassLocalVolatility()
-    bassLocalVolatility.setFixedPointEquation(FixedPointEquation())
 
     pathsBassLv = bassLocalVolatility.sample(
         t=t,
@@ -68,14 +82,42 @@ if __name__ == '__main__':
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),
         fixedPointEquationTolerance=1e-4,
-        fixedPointEquationMaxIter=31
+        fixedPointEquationMaxIter=61
     )
 
     bassCallPrices = np.mean(np.maximum(pathsBassLv[:, 1][None] - strikes[None].T, 0), 1)
+    bassCalls = np.mean(np.maximum(pathsBassLv[:, 1][None] - callStrikes[None].T, 0), 1)
+    bassPuts = np.mean(np.maximum(putStrikes[None].T - pathsBassLv[:, 1][None], 0), 1)
     absError = np.abs(bassCallPrices - np.array(callPrices[0]))
     relativeError = np.abs(bassCallPrices - np.array(callPrices[0])) / np.array(callPrices[0])
 
     print(time.time() - startTime)
+
+    volatilitySmilesTarget = [
+        [
+            call.getImpliedVolatility(
+                strike=strikes[strikeIndex],
+                optionPrice=callPrices[callIndex][strikeIndex]
+            )
+            for strikeIndex in range(len(strikes))
+        ]
+        for callIndex, call in enumerate(calls)
+    ][0]
+
+    volatilityCallSmilesBass = [
+        calls[0].getImpliedVolatility(
+            strike=callStrikes[strikeIndex],
+            optionPrice=bassCalls[strikeIndex]
+        )
+        for strikeIndex in range(len(callStrikes))
+    ]
+    volatilityPutSmilesBass = [
+        puts[0].getImpliedVolatility(
+            strike=putStrikes[strikeIndex],
+            optionPrice=bassPuts[strikeIndex]
+        )
+        for strikeIndex in range(len(putStrikes))
+    ]
 
     VisualVerification._multiPlot(
         [
@@ -87,7 +129,7 @@ if __name__ == '__main__':
                     ]
                 },
                 set_title={
-                    "args": ["relative error"]
+                    "args": ["calls relative error"]
                 }
             ),
             _MultiPlotInput(
@@ -98,7 +140,19 @@ if __name__ == '__main__':
                     ]
                 },
                 set_title={
-                    "args": ["abs error"]
+                    "args": ["calls abs error"]
+                }
+            ),
+            _MultiPlotInput(
+                plot={
+                    "args": [
+                        [putStrikes.tolist(), callStrikes.tolist(), strikes.tolist()],
+                        [volatilityPutSmilesBass, volatilityCallSmilesBass, volatilitySmilesTarget]
+                    ],
+                    "kwargs": {"label": ['bassPuts', 'bassCalls', 'target']}
+                },
+                set_title={
+                    "args": ["compare smiles"]
                 }
             ),
         ]
