@@ -49,11 +49,9 @@ if __name__ == '__main__':
         marginal1=marginal1,
         marginal2=marginal2,
         maxIter=21,
-        tol=1e-3,
+        tol=1e-5,
         gridBound=5.,
-        gridPoints=2001,
-        hermGaussPoints=61,
-        solutionInterpolator=SolutionFixedPointEquation
+        gridPoints=2001
     )
 
     print(numericalSolution(0.))
@@ -62,8 +60,8 @@ if __name__ == '__main__':
 
     VisualVerification.plotComparison(
         x=x,
-        func1=numericalSolution(x),
-        func2=exactFixedPointSolution(x),
+        funcValues1=numericalSolution(x),
+        funcValues2=exactFixedPointSolution(x),
         label1='numericalSolution',
         label2='exact',
         generalTitle="title",

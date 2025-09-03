@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from basslv.core.projectTyping import FloatVectorType, toNumpy
 
 
-class SolutionInterpolator(ABC):
+class GenericSolutionInterpolator(ABC):
 
     def __init__(self, x: FloatVectorType, y: FloatVectorType, tenor: float):
         self._x = x

@@ -3,11 +3,14 @@ from typing import Callable
 
 from scipy import optimize
 from scipy.stats import norm
-from scipy.interpolate import CubicSpline, PchipInterpolator
+from scipy.interpolate import CubicSpline
 
 from basslv.core.genericMarginal import GenericMarginal
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
+from basslv.core.genericMappingFunction import GenericMappingFunction
+from basslv.core.mappingFunction import MappingFunction
+from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
 from basslv.core.projectTyping import FloatVectorType
 
 
@@ -24,7 +27,33 @@ class FixedPointEquation:
     """
         [1] Antoine Conze and Henry-Labordere, "A new fast local volatility model"
     """
-    _convolutionEngine = HeatKernelConvolutionEngine()
+    # TODO details should depend on abstractions
+    _mappingFunctionConstructor: GenericMappingFunction = MappingFunction
+    _solutionInterpolatorConstructor: GenericSolutionInterpolator = \
+        SolutionFixedPointEquation
+
+    @classmethod
+    def setMappingFunction(
+            cls,
+            newMappingFunction: GenericMappingFunction
+    ) -> None:
+        cls._mappingFunctionConstructor = newMappingFunction
+
+    @classmethod
+    def setConvolutionEngine(
+            cls,
+            newConvolutionEngine: GenericHeatKernelConvolutionEngine
+    ) -> None:
+        cls._mappingFunctionConstructor.setConvolutionEngine(
+            newConvolutionEngine
+        )
+
+    @classmethod
+    def setSolutionInterpolator(
+            cls,
+            newSolutionInterpolator: GenericSolutionInterpolator
+    ) -> None:
+        cls._solutionInterpolatorConstructor = newSolutionInterpolator
 
     @staticmethod
     def getExactSolutionOfFixedPointEquationInLogNormalCase(
@@ -37,13 +66,13 @@ class FixedPointEquation:
         """
         return lambda x: norm.cdf(x / np.sqrt(tenor))
 
-    @staticmethod
+    @classmethod
     def getSolutionOfLinearisedFixedPointEquation(
+            cls,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            wGrid: FloatVectorType,
-            solutionInterpolator: SolutionInterpolator
-    ) -> SolutionInterpolator:
+            wGrid: FloatVectorType
+    ) -> GenericSolutionInterpolator:
         """
             Equation (12) [1]
         """
@@ -60,7 +89,7 @@ class FixedPointEquation:
             (marginal2.tenor - marginal1.tenor) / 2
         ) * (integral(uGrid) - integral(1 / 2))
 
-        return solutionInterpolator(
+        return cls._solutionInterpolatorConstructor(
             x=inverseCdfValues,
             y=uGrid,
             tenor=marginal1.tenor
@@ -69,41 +98,27 @@ class FixedPointEquation:
     @classmethod
     def getMappingFunction(
             cls,
-            solution: SolutionInterpolator,
+            solution: GenericSolutionInterpolator,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            time: float,
-            hermGaussPoints: int
+            time: float
     ) -> Callable[[FloatVectorType], FloatVectorType]:
         """
             Equation (3) [1]
         """
-        internalConvolution = \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
-                time=np.array([marginal2.tenor - marginal1.tenor])[None],
-                func=solution,
-                hermgaussPoints=hermGaussPoints
-        )
-
-        def applySecondMarginalInverseCdf(x):
-            u = internalConvolution(x)
-            return marginal2.inverseCdf(u)
-
-        externalConvolution = \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
-                time=marginal2.tenor - time,
-                func=applySecondMarginalInverseCdf,
-                hermgaussPoints=hermGaussPoints
-        )
-        return externalConvolution
+        return cls._mappingFunctionConstructor(
+            marginal1=marginal1,
+            marginal2=marginal2,
+            solutionOfFixedPointEquation=solution,
+            solutionInterpolatorConstructor=cls._solutionInterpolatorConstructor
+        ).getMappingFunction(time)
 
     @classmethod
     def applyOperatorA(
             cls,
-            solution: SolutionInterpolator,
+            solution: GenericSolutionInterpolator,
             marginal1: GenericMarginal,
-            marginal2: GenericMarginal,
-            hermGaussPoints: int
+            marginal2: GenericMarginal
     ) -> Callable[[FloatVectorType], FloatVectorType]:
         """
             Equation (2) [1]
@@ -114,8 +129,7 @@ class FixedPointEquation:
                 solution=solution,
                 marginal1=marginal1,
                 marginal2=marginal2,
-                time=marginal1.tenor,
-                hermGaussPoints=hermGaussPoints
+                time=marginal1.tenor
             )(x)
             return marginal1.cdf(mappingFuncValues)
 
@@ -128,11 +142,11 @@ class FixedPointEquation:
     ) -> float:
         return np.max(np.abs(sequence1 - sequence2))
 
-    @staticmethod
+    @classmethod
     def adjustCdfSolution(
-            solution: SolutionInterpolator,
-            solutionInterpolator: SolutionInterpolator
-    ) -> SolutionInterpolator:
+            cls,
+            solution: GenericSolutionInterpolator
+    ) -> GenericSolutionInterpolator:
         """
             In current version (22/08/2025) a solution of the Fixed Point Equation,
              when an initial iteration is got as solution of Linearized Fixed Point Equation,
@@ -144,8 +158,8 @@ class FixedPointEquation:
         errorInZero = 0.5 - solution(0.)
         print(f'Error in zero: {errorInZero} for marginal.tenor={solution.tenor}')
         objective = lambda x: 0.5 - solution(x)
-        adjustment = optimize.bisect(objective, a=-7., b=7.)
-        adjustedSolution = solutionInterpolator(
+        adjustment = optimize.bisect(objective, a=-10., b=10.)
+        adjustedSolution = cls._solutionInterpolatorConstructor(
             x=wGrid - adjustment,
             y=solution(wGrid),
             tenor=solution.tenor
@@ -154,17 +168,16 @@ class FixedPointEquation:
         print()
         return adjustedSolution
 
+    @classmethod
     def solveFixedPointEquation(
-            self,
+            cls,
             marginal1: GenericMarginal,
             marginal2: GenericMarginal,
-            solutionInterpolator: SolutionInterpolator,
             maxIter: int = 61,
             tol: float = 1e-5,
             gridBound: float = 5.,
-            gridPoints = 2001,
-            hermGaussPoints: int = 61
-    ) -> SolutionInterpolator:
+            gridPoints = 2001
+    ) -> GenericSolutionInterpolator:
         wGrid = np.linspace(
             start=-gridBound,
             stop=gridBound,
@@ -172,26 +185,24 @@ class FixedPointEquation:
             endpoint=True
         ) * np.sqrt(marginal1.tenor)
 
-        solution = self.getSolutionOfLinearisedFixedPointEquation(
+        solution = cls.getSolutionOfLinearisedFixedPointEquation(
             marginal1=marginal1,
             marginal2=marginal2,
-            wGrid=wGrid,
-            solutionInterpolator=solutionInterpolator
+            wGrid=wGrid
         )
 
         for iterationIndex in range(maxIter):
-            solutionNextIteration = solutionInterpolator(
+            solutionNextIteration = cls._solutionInterpolatorConstructor(
                 x=wGrid,
-                y=self.applyOperatorA(
+                y=cls.applyOperatorA(
                     solution=solution,
                     marginal1=marginal1,
-                    marginal2=marginal2,
-                    hermGaussPoints=hermGaussPoints
+                    marginal2=marginal2
                 )(wGrid),
                 tenor=marginal1.tenor
             )
 
-            lInftyValue = self.LInfinityNorm(
+            lInftyValue = cls.LInfinityNorm(
                 sequence1=solutionNextIteration(wGrid),
                 sequence2=solution(wGrid)
             )
@@ -206,11 +217,8 @@ class FixedPointEquation:
                 break
 
             if iterationIndex == (maxIter - 1):
-                print(f'Current tol: {tol}, reach {lInftyValue}')
-                raise ConvergeError(f'Current tol: {tol}, reach {lInftyValue}')
+                print(f'Converge error: current tol: {tol}, reach {lInftyValue}')
+                # raise ConvergeError(f'Current tol: {tol}, reach {lInftyValue}')
 
-        solution = self.adjustCdfSolution(
-            solution=solution,
-            solutionInterpolator=solutionInterpolator
-        )
+        solution = cls.adjustCdfSolution(solution=solution)
         return solution

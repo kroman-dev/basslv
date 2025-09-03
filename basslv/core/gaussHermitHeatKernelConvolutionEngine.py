@@ -6,12 +6,21 @@ from numpy.polynomial.hermite import hermgauss
 from numpy.polynomial.hermite_e import hermegauss
 
 from basslv.core.projectTyping import FloatVectorType, toNumpy
+from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
 
 
 EPS = np.finfo(float).eps
 
 
-class HeatKernelConvolutionEngine:
+class GaussHermitHeatKernelConvolutionEngine(GenericHeatKernelConvolutionEngine):
+
+    _hermgaussPoints = 61
+
+    @classmethod
+    def setHermgaussPoints(cls, newHermgaussPoints: int):
+        if not isinstance(newHermgaussPoints, int):
+            raise TypeError(f'newHermgaussPoints must be int, got {newHermgaussPoints}')
+        cls._hermgaussPoints = newHermgaussPoints
 
     @staticmethod
     def heatKernel(x: float, t: float) -> float:
@@ -81,3 +90,14 @@ class HeatKernelConvolutionEngine:
             )
 
         return f
+
+    def convolution(
+            self,
+            time: FloatVectorType,
+            func: Callable[[FloatVectorType], FloatVectorType]
+    ) -> Callable[[FloatVectorType], FloatVectorType]:
+        return self.useGaussHermiteQuadrature(
+            time=time,
+            func=func,
+            hermgaussPoints=self._hermgaussPoints
+        )

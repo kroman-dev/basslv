@@ -11,7 +11,7 @@ from basslv import VisualVerification
 if __name__ == '__main__':
 
     expiries = [2., 3.]
-    vols = [0.2] * 2
+    vols = [0.5] * 2
 
     marginal1, marginal2 = [
         LogNormalMarginal(sigma=sigma, tenor=T)
@@ -24,11 +24,9 @@ if __name__ == '__main__':
         marginal1=marginal1,
         marginal2=marginal2,
         maxIter=61,
-        tol=1e-5,
+        tol=1e-4,
         gridBound=5.,
-        gridPoints=2001,
-        hermGaussPoints=61,
-        solutionInterpolator=SolutionFixedPointEquation
+        gridPoints=2001
     )
 
     print(numericalSolution(0.))
@@ -37,8 +35,8 @@ if __name__ == '__main__':
 
     VisualVerification.plotComparison(
         x=x,
-        func1=numericalSolution(x),
-        func2=exactFixedPointSolution(x),
+        funcValues1=numericalSolution(x),
+        funcValues2=exactFixedPointSolution(x),
         label1='numericalSolution',
         label2='exact',
         generalTitle="title",

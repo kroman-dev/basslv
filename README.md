@@ -3,11 +3,15 @@
 This repository is a fork of https://github.com/igudav/Bass-Local-Volatility
 
 Differences:
-1. Added functionality to solve fixed-point equation for arbitrary tensors.
+1. Added stub to solve fixed-point equation for arbitrary tensors.
 2. Completely redesigned the project architecture.
-3. Add MarketMarginal class (correctly work for synthetic call prices from Black model)
+3. Add MarketMarginal class (correctly work for synthetic call prices from Black and Heston)
+4. The speed of solving the fixed point equation and path generation has been improved by interpolating the inner convolution; this also resolves the OOM (Out-of-Memory) issue during path generation.
 
-Now work only for the Black-Scholes model.
+TODO:
+1) It remains unclear why the solution to the fixed point equation is shifted from 0.5. Because of this, we employ a manual fix that shifts the solution to ensure F(0) = 0.5.
+2) Improve interpolation and extrapolation of fixed point equation solution
+3) Greeks calculation
 
 Structure:
 ```

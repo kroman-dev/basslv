@@ -69,15 +69,13 @@ class VisualVerification:
         marketSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=marketMarginal1,
             marginal2=marketMarginal2,
-            wGrid=wGrid,
-            solutionInterpolator=SolutionFixedPointEquation
+            wGrid=wGrid
         )
 
         logNormalSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=logNormalMarginal1,
             marginal2=logNormalMarginal2,
-            wGrid=wGrid,
-            solutionInterpolator=SolutionFixedPointEquation
+            wGrid=wGrid
         )
 
         cls.plotFuncs(
@@ -245,23 +243,25 @@ class VisualVerification:
             cls,
             marginal1: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=2.),
             marginal2: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=3.),
-            wGrid: FloatVectorType = np.linspace(-5., 5., 2001, endpoint=True) * np.sqrt(2.),
-            hermGaussPoints=61
+            wGrid: FloatVectorType = np.linspace(-5., 5., 2001, endpoint=True) * np.sqrt(2.)
     ):
         exactMappingFunction = lambda wiener: np.exp(
             -0.5 * marginal1._sigma ** 2 * marginal1.tenor \
             + marginal1._sigma * wiener
         )
-        exactFixedPointSolution = \
-            cls._fixedPointEquation. \
+        exactFixedPointSolution = SolutionFixedPointEquation(
+            x=wGrid,
+            y=cls._fixedPointEquation. \
                 getExactSolutionOfFixedPointEquationInLogNormalCase(
                 marginal1.tenor
-            )
+            )(wGrid),
+            tenor=marginal1.tenor,
+            extrapolation=False
+        )
+
         numericalSolution = cls._fixedPointEquation.solveFixedPointEquation(
             marginal1=marginal1,
-            marginal2=marginal2,
-            solutionInterpolator=SolutionFixedPointEquation,
-            hermGaussPoints=hermGaussPoints
+            marginal2=marginal2
         )
 
         mappingFuncFromOperatorWithExactSolution = \
@@ -269,16 +269,14 @@ class VisualVerification:
                 solution=exactFixedPointSolution,
                 marginal1=marginal1,
                 marginal2=marginal2,
-                time=marginal1.tenor,
-                hermGaussPoints=hermGaussPoints
+                time=marginal1.tenor
             )
 
         numericalMapping = cls._fixedPointEquation.getMappingFunction(
             solution=numericalSolution,
             marginal1=marginal1,
             marginal2=marginal2,
-            time=marginal1.tenor,
-            hermGaussPoints=hermGaussPoints
+            time=marginal1.tenor
         )
 
         labelMappingAfterConvolution = \
@@ -331,7 +329,6 @@ class VisualVerification:
                     solution=solution,
                     marginal1=marginal1,
                     marginal2=marginal2,
-                    hermGaussPoints=61
                 )(wGrid),
                 tenor=marginal1.tenor
             )
@@ -356,13 +353,11 @@ class VisualVerification:
             marginal1: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=2.),
             marginal2: LogNormalMarginal = LogNormalMarginal(sigma=0.2, tenor=3.),
             wGrid: FloatVectorType = np.linspace(-5., 5., 1000) * np.sqrt(2.),
-            cdfInterpolator: SolutionFixedPointEquation = SolutionFixedPointEquation
     ):
         cdfSolution = cls._fixedPointEquation.getSolutionOfLinearisedFixedPointEquation(
             marginal1=marginal1,
             marginal2=marginal2,
-            wGrid=wGrid,
-            solutionInterpolator=cdfInterpolator
+            wGrid=wGrid
         )
 
         dw = wGrid[1] - wGrid[0]
@@ -382,8 +377,8 @@ class VisualVerification:
 
         cls.plotComparison(
             x=cdfValues,
-            func1=lhs,
-            func2=G_1,
+            funcValues1=lhs,
+            funcValues2=G_1,
             label1='left hand side',
             label2='right hand side = G_1(F(w))',
             generalTitle=r"Check solution of linearized fixed point eq: "
@@ -399,8 +394,8 @@ class VisualVerification:
     def plotComparison(
             cls,
             x,
-            func1,
-            func2,
+            funcValues1,
+            funcValues2,
             label1: str,
             label2: str,
             generalTitle: str,
@@ -411,15 +406,15 @@ class VisualVerification:
             diffLabelY: str = ''
     ):
         _, (generalAxis, diffAxis) = plt.subplots(nrows=1, ncols=2, figsize=(15, 8), dpi=120)
-        generalAxis.plot(x, func1, label=label1)
-        generalAxis.plot(x, func2, label=label2)
+        generalAxis.plot(x, funcValues1, label=label1)
+        generalAxis.plot(x, funcValues2, label=label2)
         generalAxis.set_title(generalTitle)
         generalAxis.set_xlabel(generalLabelX)
         generalAxis.set_ylabel(generalLabelY)
         generalAxis.legend()
         generalAxis.grid()
 
-        diffAxis.plot(x, func1 - func2, label='diff')
+        diffAxis.plot(x, funcValues1 - funcValues2, label='diff')
         diffAxis.set_xlabel(diffLabelX)
         diffAxis.set_ylabel(diffLabelY)
         diffAxis.legend()
@@ -457,14 +452,17 @@ class VisualVerification:
                     xArgs = inputs.get('args')[0]
                     yArgs = inputs.get('args')[1]
 
-                    if  len(xArgs) > 1:
+                    if len(xArgs) >= 1:
                         for inputIndex, x, y in zip(range(len(xArgs)), xArgs, yArgs):
-                            kwargs = {
-                                key: values[inputIndex]
-                                for key, values in inputs.get("kwargs").items()
-                            }
-                            axisMethod(x, y, **kwargs)
+                            if inputs.get("kwargs") is not None:
+                                kwargs = {
+                                    key: values[inputIndex]
+                                    for key, values in inputs.get("kwargs").items()
+                                }
+                            else:
+                                kwargs = {}
 
+                            axisMethod(x, y, **kwargs)
                 else:
                     axisMethod(*inputs.get('args'))
 
@@ -476,7 +474,7 @@ class VisualVerification:
     @classmethod
     def multiPlot(
             cls,
-            inputs: List[FloatVectorType],
+            funcsAbscissa: List[FloatVectorType],
             funcsCollection: List[List[Callable[[FloatVectorType], FloatVectorType]]],
             labelsCollection: List[List[str]],
             titles: List[str]
@@ -501,10 +499,10 @@ class VisualVerification:
             funcs = funcsCollection[collectionIndex]
             labels = labelsCollection[collectionIndex]
             title = titles[collectionIndex]
-            input = inputs[collectionIndex]
+            abscissa = funcsAbscissa[collectionIndex]
 
             for func, label in zip(funcs, labels):
-                axis.plot(input, func(input), label=label)
+                axis.plot(abscissa, func(abscissa), label=label)
                 axis.set_title(title)
                 axis.legend()
                 axis.grid(True)

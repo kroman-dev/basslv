@@ -3,20 +3,22 @@ import numpy as np
 from scipy.interpolate import PchipInterpolator
 from scipy.stats import norm
 
-from basslv.core.solutionInterpolator import SolutionInterpolator
+from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
 
 EPS = np.finfo(np.float64).eps
 
 
-class SolutionFixedPointEquation(SolutionInterpolator):
+class SolutionFixedPointEquation(GenericSolutionInterpolator):
 
     def __init__(
             self,
             x: FloatVectorType,
             y: FloatVectorType,
-            tenor: float
+            tenor: float,
+            extrapolation: bool = True
     ):
+        self._extrapolation = extrapolation
         super().__init__(x=x, y=y, tenor=tenor)
 
     def _buildInterpolator(self) -> None:
@@ -28,22 +30,33 @@ class SolutionFixedPointEquation(SolutionInterpolator):
              chosen as quantiles (e.g. 99.9% confidence interval).
         """
 
-        shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
-        if (shift > EPS) and abs(self._y[-1] - (1. - EPS)) > EPS:
-            xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
-            # TODO self._x[-1] ?
-            if abs(xMax) > abs(self._x[0]):
-                xMin = -xMax
-            else:
-                # TODO bad solution
-                xMin = self._x[0] * 1.05
-                xMax = self._x[-1] * 1.05
-                # raise ValueError('Fail to augment the interpolation domain')
-            self._x = np.concatenate([[xMin], self._x, [xMax]])
-            self._y = np.concatenate([[0. + EPS], self._y, [1. - EPS]])
+        if self._extrapolation:
+            shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
+            if (shift > EPS) and (abs(self._y[-1] - (1. - EPS)) > EPS) and (abs(self._y[0]) - EPS > EPS):
+                xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
 
-        self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
-        self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)
+                if abs(xMax) > abs(self._x[0]):
+                    xMin = -xMax
+                else:
+                    # TODO smart solution
+                    xMin = self._x[0] * 1.05
+                    xMax = self._x[-1] * 1.05
+                    # raise ValueError('Fail to augment the interpolation domain')
+                self._x = np.concatenate([[xMin], self._x, [xMax]])
+                self._y = np.concatenate([[0. + EPS], self._y, [1. - EPS]])
+
+        try:
+            self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
+            self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)
+        except:
+            try:
+                yUnique, yUniqueIndexes = np.unique(self.y, return_index=True)
+                self._y = self._y[yUniqueIndexes]
+                self._x = self._x[yUniqueIndexes]
+                self._interpolator = PchipInterpolator(self.x, self.y, extrapolate=False)
+                self._inverseInterpolator = PchipInterpolator(self.y, self.x, extrapolate=False)
+            except Exception as e:
+                raise e
 
     @property
     def tenor(self) -> float:

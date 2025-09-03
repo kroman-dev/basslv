@@ -5,7 +5,7 @@ from typing import Callable, List
 
 from basslv.core.fixedPointEquation import FixedPointEquation
 from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
-from basslv.core.heatKernelConvolutionEngine import HeatKernelConvolutionEngine
+from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
 from basslv.core.logNormalMarginal import LogNormalMarginal
 from basslv.core.projectTyping import FloatOrVectorType
 
@@ -27,14 +27,17 @@ class _BassOneTenorModel:
 
 # ONLY FOR LogNormalMarginal
 class BassLocalVolatility:
-    _convolutionEngine = HeatKernelConvolutionEngine()
+    _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
     _fixedPointEquation = FixedPointEquation()
+
+    @classmethod
+    def setFixedPointEquation(cls, newFixedPointEquation):
+        cls._fixedPointEquation = newFixedPointEquation
 
     @classmethod
     def _buildFirstMarginalMappingFunction(
             cls,
-            marginal: LogNormalMarginal,
-            hermgaussPoints: int
+            marginal: LogNormalMarginal
     ):
         exactSolution = cls._fixedPointEquation.\
             getExactSolutionOfFixedPointEquationInLogNormalCase(
@@ -43,10 +46,9 @@ class BassLocalVolatility:
         terminalConditionFunction = \
             lambda w: marginal.inverseCdf(exactSolution(w))
         mappingFunc = lambda t, w: \
-            cls._convolutionEngine.useGaussHermiteQuadrature(
+            cls._convolutionEngine.convolution(
                 time=marginal.tenor - t,
-                func=terminalConditionFunction,
-                hermgaussPoints=hermgaussPoints
+                func=terminalConditionFunction
         )(w)
         return mappingFunc
 
@@ -57,16 +59,14 @@ class BassLocalVolatility:
             fixedPointEquationMaxIter: int,
             fixedPointEquationTolerance: float,
             fixedPointEquationGridBound: float,
-            fixedPointEquationGridPoints: int,
-            convolutionHermGaussPoints: int
+            fixedPointEquationGridPoints: int
     ) -> List[_BassOneTenorModel]:
         tenorModels: List[_BassOneTenorModel] = [
             _BassOneTenorModel(
                 tenorStart=0.,
                 tenorEnd=marginals[0].tenor,
                 mappingFunction=cls._buildFirstMarginalMappingFunction(
-                    marginal=marginals[0],
-                    hermgaussPoints=convolutionHermGaussPoints
+                    marginal=marginals[0]
                 ),
                 solution=None,
                 marginal=marginals[0]
@@ -83,17 +83,14 @@ class BassLocalVolatility:
                 maxIter=fixedPointEquationMaxIter,
                 tol=fixedPointEquationTolerance,
                 gridBound=fixedPointEquationGridBound,
-                gridPoints=fixedPointEquationGridPoints,
-                hermGaussPoints=convolutionHermGaussPoints,
-                solutionInterpolator=SolutionFixedPointEquation
+                gridPoints=fixedPointEquationGridPoints
             )
             mappingFunction = lambda t, w: \
                 cls._fixedPointEquation.getMappingFunction(
                     solution=solution,
                     marginal1=marginal1,
                     marginal2=marginal2,
-                    time=t,
-                    hermGaussPoints=convolutionHermGaussPoints
+                    time=t
             )(w)
 
             tenorModels.append(
@@ -118,7 +115,6 @@ class BassLocalVolatility:
             fixedPointEquationTolerance: float = 1e-5,
             fixedPointEquationGridBound: float = 5.,
             fixedPointEquationGridPoints: int =2001,
-            convolutionHermGaussPoints: int = 61,
             randomGenerator: np.random.Generator = None
     ):
         randomGenerator = randomGenerator or np.random.default_rng()
@@ -138,8 +134,7 @@ class BassLocalVolatility:
             fixedPointEquationMaxIter=fixedPointEquationMaxIter,
             fixedPointEquationTolerance=fixedPointEquationTolerance,
             fixedPointEquationGridBound=fixedPointEquationGridBound,
-            fixedPointEquationGridPoints=fixedPointEquationGridPoints,
-            convolutionHermGaussPoints=convolutionHermGaussPoints
+            fixedPointEquationGridPoints=fixedPointEquationGridPoints
         )
 
         for bassModelIndex in range(len(bassTenorModels)):
@@ -149,13 +144,13 @@ class BassLocalVolatility:
             # retrieve relevant times and brownianMotion values
             fromIndex = np.searchsorted(t, timeLeftBound, "left")
             toIndex = np.searchsorted(t, bassTenorModels[bassModelIndex].tenorEnd, "right")
-            currentTimeIndexes = t[fromIndex:toIndex]
+            currentTimeInInterval = t[fromIndex:toIndex]
             brownianOnInterval = brownianMotion[:, fromIndex:toIndex]
 
             bassProcessOnInterval = \
                 bassProcessStart + brownianOnInterval - brownianStart
             underlyingPaths[:, fromIndex:toIndex] = \
-                mappingFunction(currentTimeIndexes, bassProcessOnInterval)
+                mappingFunction(currentTimeInInterval, bassProcessOnInterval)
 
             if toIndex == len(t):
                 break

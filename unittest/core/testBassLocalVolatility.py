@@ -27,8 +27,7 @@ class TestConvolution(TestCase):
 
         testedMappingFunction = \
             self._sampleBassLocalVolatility._buildFirstMarginalMappingFunction(
-                sampleMarginal,
-                hermgaussPoints=61
+                sampleMarginal
         )
 
         wGrid = np.linspace(-3., 3., 2001, endpoint=True) \
