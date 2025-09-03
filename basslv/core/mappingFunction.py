@@ -11,7 +11,6 @@ from basslv.core.genericMappingFunction import GenericMappingFunction
 
 class MappingFunction(GenericMappingFunction):
 
-    # TODO saveInternalConvolution accumulate an error
     _saveInternalConvolution = True
     # TODO details should depend on abstractions
     _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
