@@ -26,9 +26,9 @@ if __name__ == '__main__':
             pricingEngine=HestonPricingEngine(
                 kappa=0.1,
                 theta=0.2,
-                rho=-0.,
+                rho=-0.5,
                 volOfVol=0.01,
-                initialVariance=0.1
+                initialVariance=0.2
             )
         )
         for tenor in tenors
