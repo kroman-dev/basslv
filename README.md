@@ -24,15 +24,31 @@ Structure:
     │
     ├── core
     │   ├── __init__.py
-    │   ├── bassLocalVolatility.py                 <- contains the complete algorithm including Monte Carlo sampling
-    │   ├── fixedPointEquation.py                  <- contains the numerical algorithm for building the mapping function
-    │   ├── genericMarginal.py                     <- abstract class
-    │   ├── heatKernelConvolutionEngine.py         <- contains methods to calculate convolution
-    │   ├── logNormalMarginal.py                   <- exact case 
-    │   ├── marketMarginal.py                      <- build marginal from market call prices
-    │   ├── projectTyping.py                       <- auxiliary typing
-    │   ├── solutionFixedPointEquation.py          <- realization of SolutionInterpolator  
-    │   └── solutionInterpolator.py                <- abstract class - solution of fixed point equation
+    │   ├── bassLocalVolatility.py                      <- contains the complete algorithm including Monte Carlo sampling
+    │   ├── fixedPointEquation.py                       <- contains the numerical algorithm for building the mapping function
+    │   ├── gaussHermitHeatKernelConvolutionEngine.py   <- realization of genericHeatKernelConvolutionEngine
+    │   ├── genericHeatKernelConvolutionEngine.py       <- abstract class for computing convolution
+    │   ├── genericMappingFunction.py                   <- abstract class for mapping function
+    │   ├── genericMarginal.py                          <- abstract class for marginals
+    │   ├── genericSolutionInterpolator.py              <- abstract class - solution of fixed point equation
+    │   ├── mappingFunction.py                          <- realization of genericMappingFunction
+    │   ├── logNormalMarginal.py                        <- exact case 
+    │   ├── marketMarginal.py                           <- build marginal from market call prices
+    │   ├── projectTyping.py                            <- auxiliary typing  
+    │   └── solutionFixedPointEquation.py               <- realization of genericSolutionInterpolator 
+    │
+    ├── financeProducts
+    │   ├── __init__.py
+    │   ├── vanillaCall.py                              <- vanilla call
+    │   ├── vanillaOption.py                            <- convenient interface for finding npv and iv
+    │   └── vanillaPut.py                               <- vanilla put  
+    │   
+    ├── pricingEngine
+    │   ├── __init__.py
+    │   ├── blackImpliedVolatility.py                   <- to find black iv
+    │   ├── blackPricingEngine.py                       <- black vanilla calls and puts
+    │   ├── genericPricingEngine.py                     <- abstract class - specifies the interface for calculating option npv and iv
+    │   └── hestonPricingEngine.py                      <- heston vanilla calls
     │   
     └── visualVerification  
          ├── __init__.py
