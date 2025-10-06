@@ -4,7 +4,8 @@ from typing import Callable
 from basslv.core.genericMarginal import GenericMarginal
 from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.projectTyping import FloatVectorType
-from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine \
+    import GenericHeatKernelConvolutionEngine
 
 
 class GenericMappingFunction(ABC):

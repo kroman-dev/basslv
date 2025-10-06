@@ -32,7 +32,8 @@ class SolutionFixedPointEquation(GenericSolutionInterpolator):
 
         if self._extrapolation:
             shift = (1 - norm.cdf(self._x[-1] / np.sqrt(self.tenor))) / 20
-            if (shift > EPS) and (abs(self._y[-1] - (1. - EPS)) > EPS) and (abs(self._y[0]) - EPS > EPS):
+            if (shift > EPS) and (abs(self._y[-1] - (1. - EPS)) > EPS) \
+                    and (abs(self._y[0]) - EPS > EPS):
                 xMax = norm.ppf(1 - shift) * np.sqrt(self.tenor)
 
                 if abs(xMax) > abs(self._x[0]):

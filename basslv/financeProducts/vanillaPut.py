@@ -1,6 +1,7 @@
 from basslv.financeProducts.vanillaOption import VanillaOption
 from basslv.pricingEngine.genericPricingEngine import GenericPricingEngine
 
+
 class VanillaPut(VanillaOption):
 
     def __init__(

@@ -5,7 +5,8 @@ from typing import Callable, List
 
 from basslv.core.fixedPointEquation import FixedPointEquation
 from basslv.core.solutionFixedPointEquation import SolutionFixedPointEquation
-from basslv.core.gaussHermitHeatKernelConvolutionEngine import GaussHermitHeatKernelConvolutionEngine
+from basslv.core.gaussHermitHeatKernelConvolutionEngine \
+    import GaussHermitHeatKernelConvolutionEngine
 from basslv.core.logNormalMarginal import LogNormalMarginal
 from basslv.core.projectTyping import FloatOrVectorType
 
@@ -25,7 +26,6 @@ class _BassOneTenorModel:
         return f"Bass_{self.tenorStart}_{self.tenorEnd}"
 
 
-# ONLY FOR LogNormalMarginal
 class BassLocalVolatility:
     _convolutionEngine = GaussHermitHeatKernelConvolutionEngine()
     _fixedPointEquation = FixedPointEquation()
@@ -45,11 +45,11 @@ class BassLocalVolatility:
         )
         terminalConditionFunction = \
             lambda w: marginal.inverseCdf(exactSolution(w))
-        mappingFunc = lambda t, w: \
+        mappingFunc = lambda time, wiener: \
             cls._convolutionEngine.convolution(
-                time=marginal.tenor - t,
+                time=marginal.tenor - time,
                 func=terminalConditionFunction
-        )(w)
+        )(wiener)
         return mappingFunc
 
     @classmethod
@@ -85,13 +85,13 @@ class BassLocalVolatility:
                 gridBound=fixedPointEquationGridBound,
                 gridPoints=fixedPointEquationGridPoints
             )
-            mappingFunction = lambda t, w: \
+            mappingFunction = lambda time, wiener: \
                 cls._fixedPointEquation.getMappingFunction(
                     solution=solution,
                     marginal1=marginal1,
                     marginal2=marginal2,
-                    time=t
-            )(w)
+                    time=time
+            )(wiener)
 
             tenorModels.append(
                 _BassOneTenorModel(
@@ -108,7 +108,7 @@ class BassLocalVolatility:
     @classmethod
     def sample(
             cls,
-            t: FloatOrVectorType,
+            timeGrid: FloatOrVectorType,
             pathsNumber: int,
             marginals: List[LogNormalMarginal],
             fixedPointEquationMaxIter: int = 61,
@@ -120,11 +120,11 @@ class BassLocalVolatility:
         randomGenerator = randomGenerator or np.random.default_rng()
 
         brownianMotion = np.cumsum(
-            randomGenerator.normal(size=(pathsNumber, len(t)))
-                * np.sqrt(np.diff(t, prepend=0)),
+            randomGenerator.normal(size=(pathsNumber, len(timeGrid)))
+                * np.sqrt(np.diff(timeGrid, prepend=0)),
             axis=1
         )
-        underlyingPaths = np.full((pathsNumber, len(t)), np.nan)
+        underlyingPaths = np.full((pathsNumber, len(timeGrid)), np.nan)
 
         timeLeftBound = 0
         brownianStart = 0
@@ -142,9 +142,13 @@ class BassLocalVolatility:
             mappingFunction = bassTenorModels[bassModelIndex].mappingFunction
 
             # retrieve relevant times and brownianMotion values
-            fromIndex = np.searchsorted(t, timeLeftBound, "left")
-            toIndex = np.searchsorted(t, bassTenorModels[bassModelIndex].tenorEnd, "right")
-            currentTimeInInterval = t[fromIndex:toIndex]
+            fromIndex = np.searchsorted(timeGrid, timeLeftBound, "left")
+            toIndex = np.searchsorted(
+                timeGrid,
+                bassTenorModels[bassModelIndex].tenorEnd,
+                "right"
+            )
+            currentTimeInInterval = timeGrid[fromIndex:toIndex]
             brownianOnInterval = brownianMotion[:, fromIndex:toIndex]
 
             bassProcessOnInterval = \
@@ -152,12 +156,12 @@ class BassLocalVolatility:
             underlyingPaths[:, fromIndex:toIndex] = \
                 mappingFunction(currentTimeInInterval, bassProcessOnInterval)
 
-            if toIndex == len(t):
+            if toIndex == len(timeGrid):
                 break
 
             # Brownian bridge
             leftTime, bridgeTime, rightTime = \
-                t[toIndex - 1], bassTenorModels[bassModelIndex].tenorEnd, t[toIndex]
+                timeGrid[toIndex - 1], bassTenorModels[bassModelIndex].tenorEnd, timeGrid[toIndex]
             B1, B2 = brownianMotion[:, toIndex - 1], brownianMotion[:, toIndex]
             mean = B1 * (rightTime - bridgeTime) / (rightTime - leftTime + EPS) \
                    + B2 * (bridgeTime - leftTime) / (rightTime - leftTime + EPS)

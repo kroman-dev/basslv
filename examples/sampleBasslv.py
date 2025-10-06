@@ -26,7 +26,7 @@ if __name__ == '__main__':
     pathsGroundTruth = np.exp(sigma * brownianMotion - sigma ** 2 * t / 2)
 
     pathsBassLv = BassLocalVolatility().sample(
-        t=t,
+        timeGrid=t,
         pathsNumber=pathsNumber,
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),

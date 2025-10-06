@@ -42,7 +42,7 @@ if __name__ == '__main__':
     t = np.linspace(0, tenors[-1], timeGridPoints)
 
     pathsBassLv = BassLocalVolatility().sample(
-        t=t,
+        timeGrid=t,
         pathsNumber=pathsNumber,
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),

@@ -19,7 +19,13 @@ class BlackImpliedVolatility(object):
             raise ValueError('optionType be [-1, 1]')
 
         undiscountedOptionPrice = optionPrice / discountFactor
-        impliedVolatility = iv(undiscountedOptionPrice, forward, strike, timeToExpiry, optionType)
+        impliedVolatility = iv(
+            price=undiscountedOptionPrice,
+            F=forward,
+            K=strike,
+            T=timeToExpiry,
+            q=optionType
+        )
 
         if impliedVolatility == FLOAT_MAX:
             raise PriceIsAboveMaximum()

@@ -63,7 +63,7 @@ if __name__ == '__main__':
     bassLocalVolatility.setFixedPointEquation(FixedPointEquation())
 
     pathsBassLv = bassLocalVolatility.sample(
-        t=t,
+        timeGrid=t,
         pathsNumber=pathsNumber,
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),

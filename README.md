@@ -2,8 +2,10 @@
 
 This repository is a fork of https://github.com/igudav/Bass-Local-Volatility
 
+Python implementation of Bass Construction with Multi-Marginals or Bass Local Volatility model.
+
 Differences:
-1. Added stub to solve fixed-point equation for arbitrary tensors.
+1. Works for arbitrary tenors. (Note. To fix an issue a stub is used, see TODO first point)
 2. Completely redesigned the project architecture.
 3. Add MarketMarginal class (correctly work for synthetic call prices from Black and Heston)
 4. The speed of solving the fixed point equation and path generation has been improved by interpolating the inner convolution; this also resolves the OOM (Out-of-Memory) issue during path generation.

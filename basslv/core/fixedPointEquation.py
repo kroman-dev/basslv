@@ -6,7 +6,8 @@ from scipy.stats import norm
 from scipy.interpolate import CubicSpline
 
 from basslv.core.genericMarginal import GenericMarginal
-from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine \
+    import GenericHeatKernelConvolutionEngine
 from basslv.core.genericSolutionInterpolator import GenericSolutionInterpolator
 from basslv.core.genericMappingFunction import GenericMappingFunction
 from basslv.core.mappingFunction import MappingFunction

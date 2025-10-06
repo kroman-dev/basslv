@@ -6,20 +6,25 @@ from numpy.polynomial.hermite import hermgauss
 from numpy.polynomial.hermite_e import hermegauss
 
 from basslv.core.projectTyping import FloatVectorType, toNumpy
-from basslv.core.genericHeatKernelConvolutionEngine import GenericHeatKernelConvolutionEngine
+from basslv.core.genericHeatKernelConvolutionEngine \
+    import GenericHeatKernelConvolutionEngine
 
 
 EPS = np.finfo(float).eps
 
 
-class GaussHermitHeatKernelConvolutionEngine(GenericHeatKernelConvolutionEngine):
+class GaussHermitHeatKernelConvolutionEngine(
+    GenericHeatKernelConvolutionEngine
+):
 
     _hermgaussPoints = 61
 
     @classmethod
     def setHermgaussPoints(cls, newHermgaussPoints: int):
         if not isinstance(newHermgaussPoints, int):
-            raise TypeError(f'newHermgaussPoints must be int, got {newHermgaussPoints}')
+            raise TypeError(
+                f'newHermgaussPoints must be int, got {newHermgaussPoints}'
+            )
         cls._hermgaussPoints = newHermgaussPoints
 
     @staticmethod
@@ -83,7 +88,7 @@ class GaussHermitHeatKernelConvolutionEngine(GenericHeatKernelConvolutionEngine)
             variableBroadcasted, timeBroadcasted = np.broadcast_arrays(x, time)
             targetShape = (-1, *[1] * variableBroadcasted.ndim)
             newVariable = variableBroadcasted[None] \
-                          - np.sqrt(timeBroadcasted[None] + EPS) * _nodes.reshape(targetShape)
+                - np.sqrt(timeBroadcasted[None] + EPS) * _nodes.reshape(targetShape)
             return 1 / np.sqrt(2 * np.pi) * np.sum(
                 func(newVariable) * _weights.reshape(targetShape),
                 axis=0

@@ -77,7 +77,7 @@ if __name__ == '__main__':
     bassLocalVolatility = BassLocalVolatility()
 
     pathsBassLv = bassLocalVolatility.sample(
-        t=t,
+        timeGrid=t,
         pathsNumber=pathsNumber,
         marginals=marginals,
         randomGenerator=np.random.default_rng(SEED),
