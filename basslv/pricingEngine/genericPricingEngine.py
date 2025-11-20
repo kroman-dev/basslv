@@ -10,7 +10,7 @@ class GenericPricingEngine(ABC):
             discountFactor: float,
             timeToExpiry: float,
             strike: float,
-            vol: float,
+            volatility: float,
             optionType: int
     ) -> float:
         pass
